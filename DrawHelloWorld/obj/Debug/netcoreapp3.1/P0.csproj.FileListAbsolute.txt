@@ -1,0 +1,12 @@
+/Users/xhan/Projects/CS258/CS258/bin/Debug/netcoreapp3.1/P0.deps.json
+/Users/xhan/Projects/CS258/CS258/bin/Debug/netcoreapp3.1/P0.runtimeconfig.json
+/Users/xhan/Projects/CS258/CS258/bin/Debug/netcoreapp3.1/P0.runtimeconfig.dev.json
+/Users/xhan/Projects/CS258/CS258/bin/Debug/netcoreapp3.1/P0.dll
+/Users/xhan/Projects/CS258/CS258/bin/Debug/netcoreapp3.1/P0.pdb
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.csproj.AssemblyReference.cache
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.AssemblyInfoInputs.cache
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.AssemblyInfo.cs
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.csproj.CoreCompileInputs.cache
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.dll
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.pdb
+/Users/xhan/Projects/CS258/CS258/obj/Debug/netcoreapp3.1/P0.genruntimeconfig.cache
