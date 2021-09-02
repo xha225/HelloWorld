@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using static System.Console;
 
@@ -11,7 +12,7 @@ namespace CS258
         protected static int origCol;
 
         // https://docs.microsoft.com/en-us/dotnet/api/system.console.setcursorposition?view=net-5.0
-        protected static void WriteAt(string s, int x, int y, int sleep=100)
+        protected static void WriteAt(string s, int x, int y, int sleep = 0)
         {
             try
             {
@@ -65,7 +66,7 @@ namespace CS258
 
             PrintBox(hw);
             // Change font color
-            //Console.ForegroundColor = ConsoleColor.Green;
+            Console.ForegroundColor = ConsoleColor.Green;
 
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
@@ -101,9 +102,9 @@ namespace CS258
                 // Flowing from right to left
                 for (int j = hw.Length + 1; j > i; j--)
                 {
-                    WriteAt(hw[i].ToString(), j, 2,300);
-                    
-                    if (j!=i+1)
+                    WriteAt(hw[i].ToString(), j, 2, 300);
+
+                    if (j != i + 1)
                         WriteAt(" ", j, 2, 1);
                 }
             }
@@ -116,28 +117,28 @@ namespace CS258
         {
 
             //PrintBox(hw);
-            
+
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
 
             const int TOP = 0;
             const int BOTTOM = 15;
             const int X_AXIS = 10;
-            
+
             for (int i = 0; i < hw.Length; i++)
             {
 
-                Console.ForegroundColor = (ConsoleColor)r.Next(0, range); 
-                
+                Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+
 
                 // Flowing from top to bottom
-                for (int j = TOP; j < BOTTOM-i; j++)
+                for (int j = TOP; j < BOTTOM - i; j++)
                 {
                     WriteAt(hw[i].ToString(), X_AXIS, j, 100);
 
                     if (j != BOTTOM - i - 1)
                         WriteAt(" ", X_AXIS, j, 1);
-                    
+
                 }
             }
         }
@@ -160,57 +161,110 @@ namespace CS258
 
 
                 // Flowing from bottom to top
-                for (int j = BOTTOM; j > i-TOP; j--)
+                for (int j = BOTTOM; j > i - TOP; j--)
                 {
                     WriteAt(hw[i].ToString(), X_AXIS, j, 100);
 
-                    if (j != i-TOP+1)
+                    if (j != i - TOP + 1)
                         WriteAt(" ", X_AXIS, j, 1);
 
                 }
             }
         }
 
-        // Snake
-        protected static void Snake()
+        protected static void WriteAtCoordinate(Dictionary<int, int[]> coordinate, string s)
+        {
+            foreach (var pair in coordinate)
+            {
+
+                WriteAt(s[pair.Key].ToString(), pair.Value[0], pair.Value[1]);
+            }
+        }
+        protected static void UpdateSnakeCoordinates(int x, int y, Dictionary<int, int[]> coordinate, string s)
+        {
+            for (int i = s.Length - 1; i > 0; i--)
+            {
+                // Update character coordinate except the first character
+                coordinate[i] = coordinate[i - 1];
+            }
+
+            // Update head
+            coordinate[0] = new int[] { x, y };
+        }
+
+        protected static void DrawBorder(int height, int width)
+        {
+            // left
+            WriteAt("*", 0, 0);
+
+            int i;
+            
+            for (i = 1; i < height; i++)
+            {
+                WriteAt("|", 0, i);
+            }
+            WriteAt("*", 0, i);
+            int yAxis = i;
+
+            // bottom
+            for (i = 1; i < width; i++)
+            {
+                WriteAt("-", i, yAxis);
+            }
+            WriteAt("*", i, yAxis);
+            int xAxis = i;
+
+            // right
+            for (i = yAxis - 1; i > 0; i--)
+            {
+                WriteAt("|", xAxis, i);
+            }
+            WriteAt("*", xAxis, 0);
+
+            // top
+            for (i = width - 1; i > 0; i--)
+            {
+                WriteAt("-", i, 0);
+            }
+        }
+
+        // The Snake Game
+        protected static void Snake(string hw)
         {
             // Reference: https://jbwyatt.com/Code/Csharp/code/snake.cs.html
-            // start game
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
 
-            // display this char on the console during the game
-            char ch = '*';
             bool gameLive = true;
-            ConsoleKeyInfo consoleKey; // holds whatever key is pressed
+            ConsoleKeyInfo consoleKey;
 
             // location info & display
             int x = 0, y = 2; // y is 2 to allow the top row for directions & space
             int dx = 1, dy = 0;
-            int consoleWidthLimit = 79;
-            int consoleHeightLimit = 24;
+            const int CONSOLE_WIDTH = 79;
+            const int CONSOLE_HEIGHT = 24;
+            Dictionary<int, int[]> hwCoordinate = new Dictionary<int, int[]>();
 
-            // clear to color
-            Console.BackgroundColor = ConsoleColor.DarkGray;
-            Console.Clear();
+            int i;
+            // Initialize character coordinates
+            for (i= 0; i < hw.Length; i++)
+            {
+                int[] coordinate = { i, y };
+                hwCoordinate.Add(i, coordinate);
+            }
 
-            // delay to slow down the character movement so you can see it
-            int delayInMillisecs = 50;
+            
+            WriteAtCoordinate(hwCoordinate, hw);
 
-            // whether to keep trails
-            bool trail = true;
-
+            // print directions at top, then restore position
+            // save then restore current color
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("Snake - Hello World");
+            Console.WriteLine("Arrows move up/down/right/left. Press 'esc' quit.");
+            //TODO: draw the border
+            DrawBorder(CONSOLE_HEIGHT,CONSOLE_WIDTH);
+            
             do // until escape
             {
-                // print directions at top, then restore position
-                // save then restore current color
-                ConsoleColor cc = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Black;
-                Console.SetCursorPosition(0, 0);
-                Console.WriteLine("Arrows move up/down/right/left. 't' trail.  'c' clear  'esc' quit.");
-                Console.SetCursorPosition(x, y);
-                Console.ForegroundColor = cc;
-
                 // see if a key has been pressed
                 if (Console.KeyAvailable)
                 {
@@ -218,14 +272,7 @@ namespace CS258
                     consoleKey = Console.ReadKey(true);
                     switch (consoleKey.Key)
                     {
-                        case ConsoleKey.T:
-                            trail = true;
-                            break;
-                        case ConsoleKey.C:
-                            Console.BackgroundColor = ConsoleColor.DarkGray;
-                            trail = true;
-                            Console.Clear();
-                            break;
+
                         case ConsoleKey.UpArrow: //UP
                             dx = 0;
                             dy = -1;
@@ -250,35 +297,36 @@ namespace CS258
                             gameLive = false;
                             break;
                     }
+
+                    // calculate the new position
+                    // note x set to 0 because we use the whole width, but y set to 1 because we use top row for instructions
+                    x += dx;
+                    if (x > CONSOLE_WIDTH)
+                        x = 0;
+                    if (x < 0)
+                        x = CONSOLE_WIDTH;
+
+                    y += dy;
+                    if (y > CONSOLE_HEIGHT)
+                        y = 2; // 2 due to top spaces used for directions
+                    if (y < 2)
+                        y = CONSOLE_HEIGHT;
+
+                    // Clear screen
+                    // TODO: clear only a portion of the screen
+                    Console.Clear();
+                    // Re-Draw border
+                    DrawBorder(CONSOLE_HEIGHT, CONSOLE_WIDTH);
+                    // write the character in the new position
+                    Console.SetCursorPosition(x, y);
+                    // Update character coordinates
+                    UpdateSnakeCoordinates(x, y, hwCoordinate, hw);
+                    WriteAtCoordinate(hwCoordinate, hw);
+                    //Console.Write(ch);
                 }
 
-                // find the current position in the console grid & erase the character there if don't want to see the trail
-                Console.SetCursorPosition(x, y);
-                if (trail == false)
-                    Console.Write(' ');
-
-                // calculate the new position
-                // note x set to 0 because we use the whole width, but y set to 1 because we use top row for instructions
-                x += dx;
-                if (x > consoleWidthLimit)
-                    x = 0;
-                if (x < 0)
-                    x = consoleWidthLimit;
-
-                y += dy;
-                if (y > consoleHeightLimit)
-                    y = 2; // 2 due to top spaces used for directions
-                if (y < 2)
-                    y = consoleHeightLimit;
-
-                // write the character in the new position
-                Console.SetCursorPosition(x, y);
-                Console.Write(ch);
-
-                // pause to allow eyeballs to keep up
-                System.Threading.Thread.Sleep(delayInMillisecs);
-
             } while (gameLive);
+
         }
 
         // MAIN
@@ -287,7 +335,7 @@ namespace CS258
             string hw = "HELLO WORLD!";
 
             // TODO: Change mode before each run
-            const int MODE = 1;
+            const int MODE = 17;
 
             switch (MODE)
             {
@@ -334,14 +382,13 @@ namespace CS258
                 case 16: // Firework effect, characters going from bottom to top
                     break;
                 case 17: // Snake game, control "Hello World"
-                    Snake();
+                    Snake(hw);
                     break;
-            }
-                
-            
-            
+                case 18: // Play the hello world music
+                    // https://khalidabuhakmeh.com/playing-the-super-mario-bros-theme-with-csharp
+                    break;
 
-            
+            }
 
         }
     }
