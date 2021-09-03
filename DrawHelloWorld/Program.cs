@@ -198,7 +198,7 @@ namespace CS258
             WriteAt("*", 0, 0);
 
             int i;
-            
+
             for (i = 1; i < height; i++)
             {
                 WriteAt("|", 0, i);
@@ -228,7 +228,7 @@ namespace CS258
             }
         }
 
-        // The Snake Game
+        // The Snake Game V1
         protected static void Snake(string hw)
         {
             // Reference: https://jbwyatt.com/Code/Csharp/code/snake.cs.html
@@ -245,13 +245,12 @@ namespace CS258
 
             int i;
             // Initialize character coordinates
-            for (i= 0; i < hw.Length; i++)
+            for (i = 0; i < hw.Length; i++)
             {
                 int[] coordinate = { i, y };
                 hwCoordinate.Add(i, coordinate);
             }
 
-            
             WriteAtCoordinate(hwCoordinate, hw);
 
             // print directions at top, then restore position
@@ -261,8 +260,8 @@ namespace CS258
             Console.WriteLine("Snake - Hello World");
             Console.WriteLine("Arrows move up/down/right/left. Press 'esc' quit.");
             //TODO: draw the border
-            DrawBorder(CONSOLE_HEIGHT,CONSOLE_WIDTH);
-            
+            DrawBorder(CONSOLE_HEIGHT, CONSOLE_WIDTH);
+
             do // until escape
             {
                 // see if a key has been pressed
@@ -272,7 +271,6 @@ namespace CS258
                     consoleKey = Console.ReadKey(true);
                     switch (consoleKey.Key)
                     {
-
                         case ConsoleKey.UpArrow: //UP
                             dx = 0;
                             dy = -1;
@@ -291,7 +289,7 @@ namespace CS258
                         case ConsoleKey.RightArrow: //RIGHT
                             dx = 1;
                             dy = 0;
-                            Console.ForegroundColor = ConsoleColor.Black;
+                            Console.ForegroundColor = ConsoleColor.Yellow;
                             break;
                         case ConsoleKey.Escape: //END
                             gameLive = false;
@@ -308,8 +306,8 @@ namespace CS258
 
                     y += dy;
                     if (y > CONSOLE_HEIGHT)
-                        y = 2; // 2 due to top spaces used for directions
-                    if (y < 2)
+                        y = 0;
+                    if (y < 0)
                         y = CONSOLE_HEIGHT;
 
                     // Clear screen
@@ -329,13 +327,180 @@ namespace CS258
 
         }
 
+        protected static void PrintEatableCharacters(List<KeyValuePair<char, int[]>> chs)
+        {
+            foreach (KeyValuePair<char, int[]> k in chs)
+            {
+                WriteAt(k.Key.ToString(), k.Value[0], k.Value[1]);
+            }
+        }
+
+        protected static bool SnakeCompareCoordinate(int[] c1, int[] c2)
+        {
+            if (c1[0] == c2[0] && c1[1] == c2[1])
+                return true;
+            else
+                return false;
+        }
+
+        protected static void SankeContact(Dictionary<int, int[]> hwCoordinate,
+            List<KeyValuePair<char, int[]>> eatableChs, ref string snake)
+        {
+            // Get snake size
+            int snakeSize = hwCoordinate.Count;
+            for (int i=0;i<eatableChs.Count;i++)
+            {
+                if(SnakeCompareCoordinate(hwCoordinate[0], eatableChs[i].Value))
+                {
+                    // Add character to the end of the snake
+                    snake = snake + eatableChs[i].Key;
+                    // Add one coordinate, any value would do
+                    hwCoordinate.Add(snakeSize,eatableChs[i].Value);
+                    // Remove eatable
+                    eatableChs.RemoveAt(i);
+                }
+            }            
+        }
+
+        // The Snake Game V2, add random eatable characters
+        protected static void Snake2(string hw)
+        {
+            // Reference: https://jbwyatt.com/Code/Csharp/code/snake.cs.html
+
+            bool gameLive = true;
+            ConsoleKeyInfo consoleKey;
+
+            // Counter
+            int i;
+            // location info & display
+            int x = 0, y = 2; // y is 2 to allow the top row for directions & space
+            int dx = 1, dy = 0;
+            const int CONSOLE_WIDTH = 79;
+            const int CONSOLE_HEIGHT = 24;
+            Dictionary<int, int[]> hwCoordinate = new Dictionary<int, int[]>();
+            List<KeyValuePair<char, int[]>> eatableChs = new List<KeyValuePair<char, int[]>>();
+
+            const int RANDOM_CH_COUNT = 10;
+            Random r = new Random();
+
+            for (i = 0; i < RANDOM_CH_COUNT; i++)
+            {
+                KeyValuePair<char, int[]> kv =
+                new KeyValuePair<char, int[]>((char)r.Next(65, 90),
+                                                new int[] { r.Next(1, CONSOLE_WIDTH),
+                                                r.Next(1,CONSOLE_HEIGHT)});
+
+                eatableChs.Add(kv);
+            }
+
+            // Print eatable characters
+            PrintEatableCharacters(eatableChs);
+
+            // Initialize character coordinates
+            for (i = 0; i < hw.Length; i++)
+            {
+                int[] coordinate = { i, y };
+                hwCoordinate.Add(i, coordinate);
+            }
+
+            WriteAtCoordinate(hwCoordinate, hw);
+
+            // print directions at top, then restore position
+            // save then restore current color
+            Console.ForegroundColor = ConsoleColor.Black;
+            Console.SetCursorPosition(0, 0);
+            Console.WriteLine("Snake - Hello World");
+            Console.WriteLine("Arrows move up/down/right/left. Press 'esc' quit.");
+
+            // Draw the border
+            DrawBorder(CONSOLE_HEIGHT, CONSOLE_WIDTH);
+
+            // Draw random characters
+
+            do // until escape
+            {
+                // see if a key has been pressed
+                if (Console.KeyAvailable)
+                {
+                    // get key and use it to set options
+                    consoleKey = Console.ReadKey(true);
+                    switch (consoleKey.Key)
+                    {
+                        case ConsoleKey.UpArrow: //UP
+                            dx = 0;
+                            dy = -1;
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            break;
+                        case ConsoleKey.DownArrow: // DOWN
+                            dx = 0;
+                            dy = 1;
+                            Console.ForegroundColor = ConsoleColor.Cyan;
+                            break;
+                        case ConsoleKey.LeftArrow: //LEFT
+                            dx = -1;
+                            dy = 0;
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            break;
+                        case ConsoleKey.RightArrow: //RIGHT
+                            dx = 1;
+                            dy = 0;
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            break;
+                        case ConsoleKey.Escape: //END
+                            gameLive = false;
+                            break;
+                    }
+
+                    // calculate the new position
+                    // note x set to 0 because we use the whole width, but y set to 1 because we use top row for instructions
+                    x += dx;
+                    if (x > CONSOLE_WIDTH)
+                        x = 0;
+                    if (x < 0)
+                        x = CONSOLE_WIDTH;
+
+                    y += dy;
+                    if (y > CONSOLE_HEIGHT)
+                        y = 0;
+                    if (y < 0)
+                        y = CONSOLE_HEIGHT;
+
+                    // Clear screen
+                    // TODO: clear only a portion of the screen
+                    Console.Clear();
+                    // Re-Draw border
+                    DrawBorder(CONSOLE_HEIGHT, CONSOLE_WIDTH);
+
+                    // Write the character in the new position
+                    //Console.SetCursorPosition(x, y);
+                    // Update character coordinates
+                    UpdateSnakeCoordinates(x, y, hwCoordinate, hw);
+                    WriteAtCoordinate(hwCoordinate, hw);
+                    
+                    // TODO: check for contact
+                    SankeContact(hwCoordinate, eatableChs, ref hw);
+
+                    // Print eatable characters
+                    PrintEatableCharacters(eatableChs);
+
+                    // Print Contratulations once all eatable characters are gone
+                    if (eatableChs.Count == 0)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("Congratulations");
+                        gameLive = false;
+                    }
+                }
+            } while (gameLive);
+
+        }
         // MAIN
         public static void Main()
         {
             string hw = "HELLO WORLD!";
 
             // TODO: Change mode before each run
-            const int MODE = 17;
+            const int MODE = 18;
 
             switch (MODE)
             {
@@ -381,10 +546,17 @@ namespace CS258
                     break;
                 case 16: // Firework effect, characters going from bottom to top
                     break;
-                case 17: // Snake game, control "Hello World"
+                case 17: // Snake game-1, control "Hello World"
                     Snake(hw);
                     break;
-                case 18: // Play the hello world music
+                case 18: // Snake game-2, append characters
+                    Snake2(hw);
+                    break;
+                case 19: // pac-man-1, hello world is the pac-man
+                    break;
+                case 20: // pac-man-2, use hello world to build the map
+                    break;
+                case 21: // Play the hello world music
                     // https://khalidabuhakmeh.com/playing-the-super-mario-bros-theme-with-csharp
                     break;
 
