@@ -12,7 +12,7 @@ namespace CS258
         protected static int origCol;
 
         // https://docs.microsoft.com/en-us/dotnet/api/system.console.setcursorposition?view=net-5.0
-        protected static void WriteAt(string s, int x, int y, int sleep = 0)
+        protected static void WriteAt(string s, int x, int y, int sleep = 50)
         {
             try
             {
@@ -348,18 +348,18 @@ namespace CS258
         {
             // Get snake size
             int snakeSize = hwCoordinate.Count;
-            for (int i=0;i<eatableChs.Count;i++)
+            for (int i = 0; i < eatableChs.Count; i++)
             {
-                if(SnakeCompareCoordinate(hwCoordinate[0], eatableChs[i].Value))
+                if (SnakeCompareCoordinate(hwCoordinate[0], eatableChs[i].Value))
                 {
                     // Add character to the end of the snake
                     snake = snake + eatableChs[i].Key;
                     // Add one coordinate, any value would do
-                    hwCoordinate.Add(snakeSize,eatableChs[i].Value);
+                    hwCoordinate.Add(snakeSize, eatableChs[i].Value);
                     // Remove eatable
                     eatableChs.RemoveAt(i);
                 }
-            }            
+            }
         }
 
         // The Snake Game V2, add random eatable characters
@@ -476,7 +476,7 @@ namespace CS258
                     // Update character coordinates
                     UpdateSnakeCoordinates(x, y, hwCoordinate, hw);
                     WriteAtCoordinate(hwCoordinate, hw);
-                    
+
                     // TODO: check for contact
                     SankeContact(hwCoordinate, eatableChs, ref hw);
 
@@ -492,15 +492,107 @@ namespace CS258
                     }
                 }
             } while (gameLive);
+        }
+
+        // Print the outline of HELLO WORLD with any character
+        protected static void PrintHelloWordOutline(char dot, string hw)
+        {
+            Dictionary<char, int[,]> bitImage = new Dictionary<char, int[,]>();
+            bitImage.Add('h', new int[,]{
+                          { 1, 0, 0, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 0, 0, 1 }});
+
+            bitImage.Add('e', new int[,]{
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 0, 0 },
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 0, 0 },
+                          { 1, 1, 1, 1 }
+                        });
+
+            bitImage.Add('l', new int[,]{
+                          { 1, 0, 0, 0 },
+                          { 1, 0, 0, 0 },
+                          { 1, 0, 0, 0 },
+                          { 1, 0, 0, 0 },
+                          { 1, 1, 1, 1 }
+                        });
+
+            bitImage.Add('o', new int[,]{
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 1, 1, 1 }
+                        });
+
+            bitImage.Add('w', new int[,]{
+                          { 1, 0, 0, 1 },
+                          { 1, 1, 1, 1 },
+                          { 1, 1, 1, 1 },
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 0, 1 }
+                        });
+
+            bitImage.Add('r', new int[,]{
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 1, 1, 1 },
+                          { 1, 0, 1, 0 },
+                          { 1, 0, 0, 1 }
+                        });
+
+            bitImage.Add('d', new int[,]{
+                          { 1, 1, 1, 0 },
+                          { 1, 0, 0, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 0, 0, 1 },
+                          { 1, 1, 1, 0 }
+                        });
+
+            bitImage.Add(' ', new int[,]{
+                          { 0, 0, 0, 0 },
+                          { 0, 0, 0, 0 },
+                          { 0, 0, 0, 0 },
+                          { 0, 0, 0, 0 },
+                          { 0, 0, 0, 0 }
+                        });
+
+            bitImage.Add('!', new int[,]{
+                          { 0, 1, 1, 0 },
+                          { 0, 1, 1, 0 },
+                          { 0, 1, 1, 0 },
+                          { 0, 0, 0, 0 },
+                          { 0, 1, 1, 0 }
+                        });
+
+            int dx = 0;
+
+            foreach (char c in hw.ToLower())
+            {
+                for (int i = 0; i < bitImage[c].GetLength(0); i++)
+                    
+                    for (int j = 0; j < bitImage[c].GetLength(1); j++)
+                    {
+                        if(bitImage[c][i,j] == 1)
+                            WriteAt(dot.ToString(), j + dx, i);
+                    }
+                dx += bitImage[c].GetLength(0);
+
+            }
 
         }
+
         // MAIN
         public static void Main()
         {
             string hw = "HELLO WORLD!";
 
             // TODO: Change mode before each run
-            const int MODE = 18;
+            const int MODE = 5;
 
             switch (MODE)
             {
@@ -522,44 +614,47 @@ namespace CS258
                 case 4: // print from bottom to top
                     PrintBottomToTop(hw);
                     break;
-                case 5: // sine
+                case 5: // TODO: print hello world outline with characters
+                    PrintHelloWordOutline('o',hw);
                     break;
-                case 6:// rotating characters
+                case 6: // ? 
                     break;
-                case 7:// print hello world outline with character a
+                case 7:// TODO: The Matrix
                     break;
-                case 8: // star war effect
+                case 8: // Firework effect, characters going from bottom to top
                     break;
-                case 9: // the matrix effect
+                case 9: // Greetings in random language
                     break;
-                case 10: // spiral effect
-                    break; //
-                case 11: // jet effect
+                case 10: // Snake game-1, control "Hello World"
+                    Snake(hw);
                     break;
-                case 12: // change font typeface and size
+                case 11: // Snake game-2, append characters
+                    Snake2(hw);
                     break;
-                case 13: // heart pulse effect
+                case 12: // Snake game-3
                     break;
-                case 14: // print with sound effect
+                case 13: // pac-man-1, hello world is the pac-man
+                    break;
+                case 14: // pac-man-2, use hello world to build the map
                     break;
                 case 15: // Tetris game, move the character as it drops
                     break;
-                case 16: // Firework effect, characters going from bottom to top
-                    break;
-                case 17: // Snake game-1, control "Hello World"
-                    Snake(hw);
-                    break;
-                case 18: // Snake game-2, append characters
-                    Snake2(hw);
-                    break;
-                case 19: // pac-man-1, hello world is the pac-man
-                    break;
-                case 20: // pac-man-2, use hello world to build the map
-                    break;
-                case 21: // Play the hello world music
+                case 16: // Play the hello world music
                     // https://khalidabuhakmeh.com/playing-the-super-mario-bros-theme-with-csharp
                     break;
-
+                case 17: // ?
+                    break;
+                case 18:
+                    break;
+                case 19:
+                    break;
+                    /*case 19: 
+                        break;
+                    case 20: 
+                        break;
+                    case 21: 
+                        break;
+                    */
             }
 
         }
