@@ -586,13 +586,97 @@ namespace CS258
 
         }
 
+        protected static void ChangeMatrixColor(int idx)
+        {
+            switch (idx)
+            {
+                case 0: // First color: White
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case 1: // 2nd - 4th color: Dark green
+                case 2:
+                case 3:
+                case 4:                    
+                case 5:
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    break;
+                case 6:
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    break;
+                case 11: // 7th color: Black
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    break;
+            }
+        }
+
+        // The Matrix Effect
+        protected static void TheMatrix()
+        {
+            
+            List<KeyValuePair<char,int>> ms = new List<KeyValuePair<char,int>>();
+            // Generate a random char and add to the top of the list
+            int i;
+
+            const int SIZE = 12;
+            int dx = 10;
+            // Bottom y coordinate
+            int dy = 0;
+            for(; ; )
+            {
+                // Clear console
+                Console.Clear();
+                // Check # of characters in the list
+                if (ms.Count < SIZE)
+                {
+                    // Add a random character at the head of the list
+                    Random r = new Random();
+                    char c = (char)r.Next(32, 125);
+                    ms.Insert(0, new KeyValuePair<char, int> (c, SIZE));
+
+                    dy++;
+                }
+
+                //
+                // Print characters and color
+                for (i = 0; i < ms.Count; i++)
+                {
+                    ChangeMatrixColor(i);
+
+                    // Update y coordinate
+                    int y = dy - i;
+                    WriteAt(ms[i].Key.ToString(), dx, y, 0);
+
+                    // Decrease counter
+                    if (ms[i].Value ==0)
+                    {
+                        // Remove from the list
+                        ms.RemoveAt(i);
+                    }
+                    else { 
+                    ms[i] = new KeyValuePair<char, int>(ms[i].Key,ms[i].Value-1);
+                    }
+                }
+                Thread.Sleep(250);
+                //WriteAt(c.ToString(), 1, 1, 300);
+
+                // Grow the letter from 1 to 5
+                // The bottom letter is in white
+                // Change the bottom letter, and last three letters disappear after 3 moves
+            }
+
+        }
+
         // MAIN
         public static void Main()
         {
             string hw = "HELLO WORLD!";
 
             // TODO: Change mode before each run
-            const int MODE = 5;
+            const int MODE = 6;
 
             switch (MODE)
             {
@@ -617,9 +701,10 @@ namespace CS258
                 case 5: // TODO: print hello world outline with characters
                     PrintHelloWordOutline('o',hw);
                     break;
-                case 6: // ? 
+                case 6: // TODO: The Matrix
+                    TheMatrix();
                     break;
-                case 7:// TODO: The Matrix
+                case 7: // ? 
                     break;
                 case 8: // Firework effect, characters going from bottom to top
                     break;
