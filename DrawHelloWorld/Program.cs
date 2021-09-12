@@ -11,19 +11,26 @@ namespace CS258
         protected static int origRow;
         protected static int origCol;
 
+        const int CONSOLE_WIDTH = 79;
+        const int CONSOLE_HEIGHT = 29;
+
         // https://docs.microsoft.com/en-us/dotnet/api/system.console.setcursorposition?view=net-5.0
         protected static void WriteAt(string s, int x, int y, int sleep = 50)
         {
-            try
+            object lockLock = new object();
+            lock (lockLock)
             {
-                Console.SetCursorPosition(origCol + x, origRow + y);
-                Console.Write(s);
-                Thread.Sleep(sleep);
-            }
-            catch (ArgumentOutOfRangeException e)
-            {
-                Console.Clear();
-                Console.WriteLine(e.Message);
+                try
+                {
+                    Console.SetCursorPosition(origCol + x, origRow + y);
+                    Console.Write(s);
+                    Thread.Sleep(sleep);
+                }
+                catch (ArgumentOutOfRangeException e)
+                {
+                    Console.Clear();
+                    Console.WriteLine(e.Message);
+                }
             }
         }
 
@@ -239,8 +246,7 @@ namespace CS258
             // location info & display
             int x = 0, y = 2; // y is 2 to allow the top row for directions & space
             int dx = 1, dy = 0;
-            const int CONSOLE_WIDTH = 79;
-            const int CONSOLE_HEIGHT = 24;
+
             Dictionary<int, int[]> hwCoordinate = new Dictionary<int, int[]>();
 
             int i;
@@ -574,10 +580,10 @@ namespace CS258
             foreach (char c in hw.ToLower())
             {
                 for (int i = 0; i < bitImage[c].GetLength(0); i++)
-                    
+
                     for (int j = 0; j < bitImage[c].GetLength(1); j++)
                     {
-                        if(bitImage[c][i,j] == 1)
+                        if (bitImage[c][i, j] == 1)
                             WriteAt(dot.ToString(), j + dx, i);
                     }
                 dx += bitImage[c].GetLength(0);
@@ -596,7 +602,7 @@ namespace CS258
                 case 1: // 2nd - 4th color: Dark green
                 case 2:
                 case 3:
-                case 4:                    
+                case 4:
                 case 5:
                     Console.ForegroundColor = ConsoleColor.Green;
                     break;
@@ -610,36 +616,60 @@ namespace CS258
                 case 11: // 7th color: Black
                     Console.ForegroundColor = ConsoleColor.Black;
                     break;
+                default:
+                    Console.ForegroundColor = ConsoleColor.Black;
+                    break;
+            }
+        }
+
+        protected static void TheMatrix1()
+        {
+            Console.CursorVisible = false;
+
+            for (; ; )
+            {
+                Random r = new Random();
+                char c = (char)r.Next(35, 150);
+                WriteAt(c.ToString(), 10, 10, 100);
             }
         }
 
         // The Matrix Effect
         protected static void TheMatrix()
         {
-            
-            List<KeyValuePair<char,int>> ms = new List<KeyValuePair<char,int>>();
+            List<KeyValuePair<char, int>> ms = new List<KeyValuePair<char, int>>();
             // Generate a random char and add to the top of the list
             int i;
-
+            Random r = new Random();
             const int SIZE = 12;
-            int dx = 10;
-            // Bottom y coordinate
+            int dx = r.Next(0, CONSOLE_WIDTH);
+            // head y coordinate
             int dy = 0;
-            for(; ; )
+            // y coordinate except for the head
+            int y = 0;
+            // Rest string
+            bool rest = false;
+
+            // Hide cursor
+            Console.CursorVisible = false;
+
+            for (; ; )
             {
-                // Clear console
-                Console.Clear();
+                // Clear last character
+                WriteAt(" ", dx, y, 0);
+                //if(!hwMode)
                 // Check # of characters in the list
+
                 if (ms.Count < SIZE)
                 {
                     // Add a random character at the head of the list
-                    Random r = new Random();
-                    char c = (char)r.Next(32, 125);
-                    ms.Insert(0, new KeyValuePair<char, int> (c, SIZE));
 
-                    dy++;
+                    char c = (char)r.Next(32, 125);
+                    ms.Insert(0, new KeyValuePair<char, int>(c, SIZE));
                 }
 
+                // Update dy in each iteration
+                dy++;
                 //
                 // Print characters and color
                 for (i = 0; i < ms.Count; i++)
@@ -647,36 +677,225 @@ namespace CS258
                     ChangeMatrixColor(i);
 
                     // Update y coordinate
-                    int y = dy - i;
+                    y = dy - i;
                     WriteAt(ms[i].Key.ToString(), dx, y, 0);
 
                     // Decrease counter
-                    if (ms[i].Value ==0)
+                    if (ms[i].Value == 0)
                     {
                         // Remove from the list
                         ms.RemoveAt(i);
                     }
-                    else { 
-                    ms[i] = new KeyValuePair<char, int>(ms[i].Key,ms[i].Value-1);
+                    else
+                    {
+                        ms[i] = new KeyValuePair<char, int>(ms[i].Key, ms[i].Value - 1);
+                    }
+
+
+                    // y first touches the bottom of the console
+                    if (y == CONSOLE_HEIGHT)
+                    {
+                        rest = true;
+                    }
+                    else
+                        rest = false;
+
+
+                    // When y touches the bottom, then re-assign dx and dy
+                    // TODO: couble check i==ms.Count-1
+                    if (i == ms.Count - 1 && rest)
+                    {
+
+                        dx = r.Next(0, CONSOLE_WIDTH);
+                        dy = 0;
+                        ms.Clear();
+                        rest = false;
                     }
                 }
-                Thread.Sleep(250);
-                //WriteAt(c.ToString(), 1, 1, 300);
-
-                // Grow the letter from 1 to 5
-                // The bottom letter is in white
-                // Change the bottom letter, and last three letters disappear after 3 moves
+                Thread.Sleep(200);
             }
 
         }
 
+        protected static void TheMatrixHw2()
+        {
+            string hw = "Hello World!";
+            List<KeyValuePair<char, int>> ms = new List<KeyValuePair<char, int>>();
+            // Generate a random char and add to the top of the list
+            int i;
+            Random r = new Random();
+            int SIZE = hw.Length;
+            int dx = r.Next(0, CONSOLE_WIDTH);
+            // head y coordinate
+            int dy = 0;
+            // y coordinate except for the head
+            int y = 0;
+            // Rest string
+            bool rest = false;
+
+            // Hide cursor
+            Console.CursorVisible = false;
+
+            // hw index
+            int ind = 0;
+            for (; ; )
+            {
+                // Clear last character
+                WriteAt(" ", dx, y, 0);
+                //if(!hwMode)
+                // Check # of characters in the list
+
+                if (ms.Count < SIZE)
+                {
+                    // Add a character at the head of the list
+                    ms.Insert(0, new KeyValuePair<char, int>(hw[ind], SIZE));
+                    ind++;
+                }
+                else
+                {
+                    ind %= SIZE;
+                    ms.Insert(0, new KeyValuePair<char, int>(hw[ind], SIZE));
+                    ind++;
+                }
+
+                // Update dy in each iteration
+                dy++;
+                //
+                // Print characters and color
+                for (i = 0; i < ms.Count; i++)
+                {
+                    ChangeMatrixColor(i);
+
+                    // Update y coordinate
+                    y = dy - i;
+                    WriteAt(ms[i].Key.ToString(), dx, y, 0);
+
+                    // Decrease counter
+                    if (ms[i].Value == 0)
+                    {
+                        // Remove from the list
+                        ms.RemoveAt(i);
+                    }
+                    else
+                    {
+                        ms[i] = new KeyValuePair<char, int>(ms[i].Key, ms[i].Value - 1);
+                    }
+
+
+                    // y first touches the bottom of the console
+                    if (y == CONSOLE_HEIGHT)
+                    {
+                        rest = true;
+                    }
+                    else
+                        rest = false;
+
+                    // When y touches the bottom, then re-assign dx and dy
+                    if (i == ms.Count-2 && rest)
+                    {
+
+                        dx = r.Next(0, CONSOLE_WIDTH);
+                        dy = 0;
+                        ms.Clear();
+                        rest = false;
+                        ind = 0;
+                    }
+                }
+                Thread.Sleep(200);
+            }
+        }
+
+
+        // The Matrix Effect
+        protected static void TheMatrixHw()
+        {
+            string hw = "Hello World!";
+            List<KeyValuePair<char, int>> ms = new List<KeyValuePair<char, int>>();
+            // Generate a random char and add to the top of the list
+            int i;
+            Random r = new Random();
+
+            int dx = r.Next(0, CONSOLE_WIDTH);
+            // head y coordinate
+            int dy = hw.Length;
+            // y coordinate except for the head
+            int y = 0;
+            // Rest string
+            bool rest = false;
+
+            // Hide cursor
+            Console.CursorVisible = false;
+
+
+            // Initilize list
+            foreach (char c in hw)
+            {
+                ms.Add(new KeyValuePair<char, int>(c, hw.Length));
+            }
+
+
+            for (; ; )
+            {
+
+                // Clear last character
+                WriteAt(" ", dx, y, 0);
+
+                // Update dy in each iteration
+                dy++;
+                //
+                // Print characters and color
+                for (i = 0; i < ms.Count; i++)
+                {
+                    ChangeMatrixColor(i);
+
+                    // Update y coordinate
+                    y = dy - i;
+                    WriteAt(ms[i].Key.ToString(), dx, y, 0);
+
+                    // Decrease counter
+                    if (ms[i].Value == 0)
+                    {
+                        // Reset counter
+                        ms[i] = new KeyValuePair<char, int>(ms[i].Key, hw.Length);
+                    }
+                    else
+                    {
+                        ms[i] = new KeyValuePair<char, int>(ms[i].Key, ms[i].Value - 1);
+                    }
+
+
+                    // y first touches the bottom of the console
+                    if (y == CONSOLE_HEIGHT)
+                    {
+                        rest = true;
+                    }
+
+                    // When y touches the bottom, then re-assign dx and dy
+                    if (i == ms.Count - 1 && rest)
+                    {
+
+                        dx = r.Next(0, CONSOLE_WIDTH);
+                        dy = hw.Length;
+                        // TODO: fix this
+                        for (int j = CONSOLE_HEIGHT; j > 0; j--)
+                        {
+                            WriteAt(" ", dx, j, 0);
+                        }
+
+                        rest = false;
+                    }
+                }
+                Thread.Sleep(200);
+            }
+
+        }
         // MAIN
         public static void Main()
         {
             string hw = "HELLO WORLD!";
 
             // TODO: Change mode before each run
-            const int MODE = 6;
+            const int MODE = 7;
 
             switch (MODE)
             {
@@ -698,13 +917,20 @@ namespace CS258
                 case 4: // print from bottom to top
                     PrintBottomToTop(hw);
                     break;
-                case 5: // TODO: print hello world outline with characters
-                    PrintHelloWordOutline('o',hw);
+                case 5: // Hello world outline with characters
+                    PrintHelloWordOutline('o', hw);
                     break;
-                case 6: // TODO: The Matrix
-                    TheMatrix();
+                case 6: // The Matrix
+                    for (int i = 0; i < 15; i++)
+                    {
+                        ThreadStart child = new ThreadStart(TheMatrix);
+                        Thread childThread = new Thread(child);
+                        childThread.Start();
+                        Thread.Sleep(2000);
+                    }
                     break;
-                case 7: // ? 
+                case 7: // ?
+                    TheMatrixHw2();
                     break;
                 case 8: // Firework effect, characters going from bottom to top
                     break;
