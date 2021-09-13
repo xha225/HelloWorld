@@ -503,6 +503,9 @@ namespace CS258
         // Print the outline of HELLO WORLD with any character
         protected static void PrintHelloWordOutline(char dot, string hw)
         {
+            Random r = new Random();
+            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
+
             Dictionary<char, int[,]> bitImage = new Dictionary<char, int[,]>();
             bitImage.Add('h', new int[,]{
                           { 1, 0, 0, 1 },
@@ -579,6 +582,7 @@ namespace CS258
 
             foreach (char c in hw.ToLower())
             {
+                Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
                 for (int i = 0; i < bitImage[c].GetLength(0); i++)
 
                     for (int j = 0; j < bitImage[c].GetLength(1); j++)
@@ -895,7 +899,7 @@ namespace CS258
             string hw = "HELLO WORLD!";
 
             // TODO: Change mode before each run
-            const int MODE = 7;
+            const int MODE = 5;
 
             switch (MODE)
             {
@@ -918,7 +922,7 @@ namespace CS258
                     PrintBottomToTop(hw);
                     break;
                 case 5: // Hello world outline with characters
-                    PrintHelloWordOutline('o', hw);
+                    PrintHelloWordOutline('/', hw);
                     break;
                 case 6: // The Matrix
                     for (int i = 0; i < 15; i++)
@@ -929,8 +933,14 @@ namespace CS258
                         Thread.Sleep(2000);
                     }
                     break;
-                case 7: // ?
-                    TheMatrixHw2();
+                case 7: // The Matrix HelloWorld!
+                    for (int i = 0; i < 15; i++)
+                    {
+                        ThreadStart child = new ThreadStart(TheMatrixHw2);
+                        Thread childThread = new Thread(child);
+                        childThread.Start();
+                        Thread.Sleep(2000);
+                    }
                     break;
                 case 8: // Firework effect, characters going from bottom to top
                     break;
