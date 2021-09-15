@@ -163,9 +163,7 @@ namespace CS258
 
             for (int i = 0; i < hw.Length; i++)
             {
-
                 Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
-
 
                 // Flowing from bottom to top
                 for (int j = BOTTOM; j > i - TOP; j--)
@@ -179,6 +177,155 @@ namespace CS258
             }
         }
 
+        protected static void DrawRow(string s,int dx, int dy, int count)
+        {
+            for(int i=0;i<count;i++)
+            {
+                dx += i;
+                WriteAt(s, dx, dy, 0);
+            }
+        }
+
+        protected static void DrawFlower(string s, int layer, int dx, int dy)
+        {
+            // Center
+            WriteAt(s, dx, dy);
+            // First layer
+            for(int i = 0; i <= layer; i++)
+            {
+                WriteAt(s, dx, dy);
+                // Top left
+                dx -= 1;
+                dy -= 1;
+            }
+
+        }
+
+        protected static void PrintSqure(int dx, int dy, int len, string[,] s)
+        {
+            int x = dx, y = dy;
+            for(int i=0;i<len;i++)
+            {
+                if (i==0 || i==len-1) // print row
+                {
+                    y = dy + i;
+                    x = dx;
+                    for (int j=0;j<len;j++)
+                    {
+                        WriteAt(s[x-dx+j,y-dy], x+j, y, 0);
+                    }
+                    if (i == len - 1)
+                    {
+                        Thread.Sleep(3000);
+                        //Console.Clear();
+                    }
+                }
+                else // print border
+                {
+                    x = dx;
+                    y = dy + i;
+                    WriteAt(s[x-dx,y-dy], x, y, 0);
+                    x = dx + len -1;
+                    WriteAt(s[x-dx,y-dy], x, y, 0);
+                }
+            }
+        }
+
+        protected static void ShowFireFlower(int dx, int dy)
+        {
+            int x = dx, y = dy;
+            Random r = new Random();
+            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
+            
+
+            string[,] fw = new string[,]
+            {
+             { "\\", "", "", "", "/" },
+             { "", "\\", "", "/", "" },
+             { "-", "-", ".", "-", "-" },
+             { "", "/", "", "\\", "" },
+             { "/", "", "", "", "\\" }
+             };
+            // Print center
+            Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+            WriteAt(fw[2, 2], x, y, 0);
+            Thread.Sleep(700);
+
+            // Print first layer
+            Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+            WriteAt(fw[2, 1], dx-1, dy, 0);
+            WriteAt(fw[2, 3], dx +1, dy, 0);
+            int jump = 2;
+            // Reset coordinates
+            x = dx - 1;
+            y = dy - 1;
+            WriteAt(fw[1, 1], x, y, 0);
+            WriteAt(fw[1, 3], x + jump, y, 0);
+            WriteAt(fw[3, 1], x, y + jump, 0);
+            WriteAt(fw[3, 3], x + jump, y + jump, 0);
+            Thread.Sleep(700);
+
+            WriteAt(fw[2, 0], dx - 2, dy, 0);
+            WriteAt(fw[2, 4], dx + 2, dy, 0);
+            jump += 2;
+            // Print second layer
+            // Reset coordinates
+            x = dx - 2;
+            y = dy - 2;
+            Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+
+            WriteAt(fw[0, 0], x, y, 0);
+            WriteAt(fw[0, 4], x + jump, y, 0);
+            WriteAt(fw[4, 0], x, y + jump, 0);
+            WriteAt(fw[4, 4], x + jump, y + jump, 0);
+
+            Thread.Sleep(700);
+            Console.Clear();
+        }
+
+        protected static void PrintFireworks(string[,] fw, int layer)
+        {
+            Console.CursorVisible = false;
+            int dx = 10, dy = 10;
+            int dimsion = 2;
+            for (int i = 0; i < layer; i++)
+            {
+                PrintSqure(dx, dy, dimsion, fw);
+                dimsion += 2;
+                dx -= 1;
+                dy -= 1;
+            }
+
+        }
+
+        // MODE = 5
+        protected static void StartFireworks(string hw)
+        {
+            const int TOP = 20;
+            const int BOTTOM = 40;
+            const int X_AXIS = 10;
+            Console.CursorVisible = false;
+            int i,j;
+            
+            for ( i= 0; i < hw.Length; i++)
+            {
+                // Flowing from bottom to top
+                for (j = BOTTOM; j > TOP-i; j--)
+                {
+                    WriteAt(hw[i].ToString(), X_AXIS, j, 100);
+
+                    if (j != i - TOP + 1)
+                        WriteAt(" ", X_AXIS, j, 1);
+                }
+
+                ShowFireFlower(X_AXIS, j);
+                
+            }
+            
+            
+            
+        }
+
         protected static void WriteAtCoordinate(Dictionary<int, int[]> coordinate, string s)
         {
             foreach (var pair in coordinate)
@@ -187,6 +334,7 @@ namespace CS258
                 WriteAt(s[pair.Key].ToString(), pair.Value[0], pair.Value[1]);
             }
         }
+
         protected static void UpdateSnakeCoordinates(int x, int y, Dictionary<int, int[]> coordinate, string s)
         {
             for (int i = s.Length - 1; i > 0; i--)
@@ -328,9 +476,7 @@ namespace CS258
                     WriteAtCoordinate(hwCoordinate, hw);
                     //Console.Write(ch);
                 }
-
             } while (gameLive);
-
         }
 
         protected static void PrintEatableCharacters(List<KeyValuePair<char, int[]>> chs)
@@ -591,8 +737,34 @@ namespace CS258
                             WriteAt(dot.ToString(), j + dx, i);
                     }
                 dx += bitImage[c].GetLength(0);
-
             }
+        }
+
+        protected static void SayHelloWorld()
+        {   
+            List<string> hw = new List<string>()
+            { "Hello World!", "こんにちは世界","你好，世界",
+                "नमस्ते दुनिया","Hola Mundo","مرحبا بالعالم",
+            "Hallo Wereld","Bonjour le monde","Hallo Welt",
+                "Aloha honua","Ciao mondo","안녕하세요 세계",
+                "ഹലോ വേൾഡ്","Olá Mundo", "Привет, мир"};
+            Random r = new Random();
+            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
+            Console.CursorVisible = false;
+            
+            // Use bold font
+            Console.Write("\x1b[1m");
+            // Change font size
+            for (; ; )
+            {
+                Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+                
+                int i = r.Next(0, hw.Count);
+                Console.WriteLine(hw[i]);
+                Thread.Sleep(1000);
+                Console.Clear();
+            }
+            
 
         }
 
@@ -626,20 +798,8 @@ namespace CS258
             }
         }
 
-        protected static void TheMatrix1()
-        {
-            Console.CursorVisible = false;
-
-            for (; ; )
-            {
-                Random r = new Random();
-                char c = (char)r.Next(35, 150);
-                WriteAt(c.ToString(), 10, 10, 100);
-            }
-        }
-
         // The Matrix Effect
-        protected static void TheMatrix()
+        protected static void EnterTheMatrix()
         {
             List<KeyValuePair<char, int>> ms = new List<KeyValuePair<char, int>>();
             // Generate a random char and add to the top of the list
@@ -704,12 +864,10 @@ namespace CS258
                     else
                         rest = false;
 
-
                     // When y touches the bottom, then re-assign dx and dy
                     // TODO: couble check i==ms.Count-1
                     if (i == ms.Count - 1 && rest)
                     {
-
                         dx = r.Next(0, CONSOLE_WIDTH);
                         dy = 0;
                         ms.Clear();
@@ -718,10 +876,9 @@ namespace CS258
                 }
                 Thread.Sleep(200);
             }
-
         }
 
-        protected static void TheMatrixHw2()
+        protected static void EnterTheMatrixHw()
         {
             string hw = "Hello World!";
             List<KeyValuePair<char, int>> ms = new List<KeyValuePair<char, int>>();
@@ -785,7 +942,6 @@ namespace CS258
                         ms[i] = new KeyValuePair<char, int>(ms[i].Key, ms[i].Value - 1);
                     }
 
-
                     // y first touches the bottom of the console
                     if (y == CONSOLE_HEIGHT)
                     {
@@ -797,7 +953,6 @@ namespace CS258
                     // When y touches the bottom, then re-assign dx and dy
                     if (i == ms.Count-2 && rest)
                     {
-
                         dx = r.Next(0, CONSOLE_WIDTH);
                         dy = 0;
                         ms.Clear();
@@ -830,17 +985,14 @@ namespace CS258
             // Hide cursor
             Console.CursorVisible = false;
 
-
             // Initilize list
             foreach (char c in hw)
             {
                 ms.Add(new KeyValuePair<char, int>(c, hw.Length));
             }
 
-
             for (; ; )
             {
-
                 // Clear last character
                 WriteAt(" ", dx, y, 0);
 
@@ -867,7 +1019,6 @@ namespace CS258
                         ms[i] = new KeyValuePair<char, int>(ms[i].Key, ms[i].Value - 1);
                     }
 
-
                     // y first touches the bottom of the console
                     if (y == CONSOLE_HEIGHT)
                     {
@@ -877,7 +1028,6 @@ namespace CS258
                     // When y touches the bottom, then re-assign dx and dy
                     if (i == ms.Count - 1 && rest)
                     {
-
                         dx = r.Next(0, CONSOLE_WIDTH);
                         dy = hw.Length;
                         // TODO: fix this
@@ -885,13 +1035,11 @@ namespace CS258
                         {
                             WriteAt(" ", dx, j, 0);
                         }
-
                         rest = false;
                     }
                 }
                 Thread.Sleep(200);
             }
-
         }
         // MAIN
         public static void Main()
@@ -921,30 +1069,33 @@ namespace CS258
                 case 4: // print from bottom to top
                     PrintBottomToTop(hw);
                     break;
-                case 5: // Hello world outline with characters
+                case 5: // Firework effect, characters going from bottom to top
+                    StartFireworks(hw);
+                    break;
+                case 6:
+                    // Hello world outline with characters
                     PrintHelloWordOutline('/', hw);
                     break;
-                case 6: // The Matrix
+                case 7: // Greetings in random language
+                    SayHelloWorld();
+                    break;
+                case 8: // The Matrix HelloWorld!
                     for (int i = 0; i < 15; i++)
                     {
-                        ThreadStart child = new ThreadStart(TheMatrix);
+                        ThreadStart child = new ThreadStart(EnterTheMatrixHw);
                         Thread childThread = new Thread(child);
                         childThread.Start();
                         Thread.Sleep(2000);
                     }
                     break;
-                case 7: // The Matrix HelloWorld!
-                    for (int i = 0; i < 15; i++)
+                case 9: // The Matrix
+                    for (int i = 0; i < 30; i++)
                     {
-                        ThreadStart child = new ThreadStart(TheMatrixHw2);
+                        ThreadStart child = new ThreadStart(EnterTheMatrix);
                         Thread childThread = new Thread(child);
                         childThread.Start();
-                        Thread.Sleep(2000);
+                        Thread.Sleep(1000);
                     }
-                    break;
-                case 8: // Firework effect, characters going from bottom to top
-                    break;
-                case 9: // Greetings in random language
                     break;
                 case 10: // Snake game-1, control "Hello World"
                     Snake(hw);
@@ -952,7 +1103,7 @@ namespace CS258
                 case 11: // Snake game-2, append characters
                     Snake2(hw);
                     break;
-                case 12: // Snake game-3
+                case 12: // Snake game-3, a moving snake
                     break;
                 case 13: // pac-man-1, hello world is the pac-man
                     break;
@@ -977,7 +1128,6 @@ namespace CS258
                         break;
                     */
             }
-
         }
     }
 
