@@ -1,53 +1,432 @@
-﻿
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
-
+using static CS258.Program;
 namespace CS258
 {
-    class TetrisChar
+    public class Tetris
     {
-        private char _ch;
-        public char ChValue
+        protected class TetrisChar
         {
-            get { return _ch; }
+            private char _ch;
+            public char ChValue
+            {
+                get { return _ch; }
+            }
+
+            private ConsoleColor _color;
+            public ConsoleColor ChColor
+            {
+                get { return _color; }
+            }
+
+            private Point _pos;
+            public Point Pos
+            {
+                get { return _pos; }
+                set { _pos = value; }
+            }
+
+            public TetrisChar(char c, ConsoleColor cc, Point p)
+            {
+                _ch = c;
+                _color = cc;
+                _pos = p;
+            }
         }
 
-        private ConsoleColor _color;
-        public ConsoleColor ChColor
+        private const int STACKS = 10;
+        private const int DROP_POINT = 4;
+        private const int MAX_STACK_HEIGHT = 20;
+
+        protected static void DrawTetrisStack(List<List<TetrisChar>> l)
         {
-            get { return _color; }
+            Console.Clear();
+            for (int i = 0; i < l.Count; i++)
+            {
+                foreach (TetrisChar tc in l[i])
+                {
+                    Console.ForegroundColor = tc.ChColor;
+                    WriteAt(tc.ChValue.ToString(), tc.Pos.X, tc.Pos.Y, 0);
+                }
+            }
         }
 
-        private Point _pos;
-        public Point Pos
+        protected static List<TetrisChar> CreateTetrisStack(int height, int columnIdx)
         {
-            get { return _pos; }
-            set { _pos = value; }
+            // Generate columns based on column index and height
+            Random r = new Random();
+            int i = r.Next(0, _hw.Length);
+            int colorRange = Enum.GetValues(typeof(ConsoleColor)).Length;
+
+            List<TetrisChar> l = new List<TetrisChar>();
+            int localHeight = r.Next(height, CONSOLE_HEIGHT);
+
+            for (i = CONSOLE_HEIGHT; i > localHeight; i--)
+            {
+                int j = r.Next(0, _hw.Length);
+                // Replace empty string
+                if (_hw[j].ToString() == " ")
+                {
+                    j++;
+                }
+
+                TetrisChar tc = new TetrisChar(_hw[j], (ConsoleColor)r.Next(1, colorRange), new Point(columnIdx, i));
+                l.Add(tc);
+            }
+
+            return l;
         }
 
-        public TetrisChar(char c, ConsoleColor cc, Point p)
+        protected static TetrisChar ReturnTetrisBlock(int numOfStacks, int y)
         {
-            _ch = c;
-            _color = cc;
-            _pos = p;
+
+            Random r = new Random();
+            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
+            int idx = r.Next(0, _hw.Length);
+            if (_hw[idx].ToString() == " ")
+            {
+                idx++;
+            }
+            char c = _hw[idx];
+            int x = r.Next(0, numOfStacks);
+            // TODO: update y axis in Point
+            return new TetrisChar(c, (ConsoleColor)r.Next(0, range), new Point(x, y));
         }
+
+        protected static bool IsSameTetrisBlock(TetrisChar tc1, TetrisChar tc2)
+        {
+            if (tc1.ChValue == tc2.ChValue || tc1.ChColor == tc2.ChColor)
+                return true;
+
+            return false;
+        }
+
+        protected static bool IsTetrisBlockLanded(TetrisChar tc, List<List<TetrisChar>> stacks)
+        {
+            // Check only for a given stack by the x axis, and check only with the stack top
+            int stackIdx = tc.Pos.X;
+            int topCharIdx = stacks[stackIdx].Count - 1;
+            int lastStackIdx = stacks.Count - 1;
+            bool remove = false;
+            bool rightmostStack = false;
+            bool leftmostStack = false;
+            bool hitBottom = false;
+
+
+            // when thre is no blocks in the stack
+            if (topCharIdx == -1)
+            {
+                // Add block to stack right before hitting the bottom
+                if (tc.Pos.Y == CONSOLE_HEIGHT - 1)
+                {
+                    TetrisChar tcBlock = new TetrisChar(tc.ChValue, tc.ChColor, new Point(tc.Pos.X, CONSOLE_HEIGHT));
+                    stacks[stackIdx].Add(tcBlock);
+
+                    hitBottom = true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // Empty Stack
+            if (topCharIdx == -1 && hitBottom)
+            {
+                int idx = 0; // bottom
+                // Check with left stack
+                if (stackIdx == 0)
+                {
+                    leftmostStack = true;
+                }
+
+                if (stackIdx == lastStackIdx)
+                {
+                    rightmostStack = true;
+                }
+
+                // if not leftmost stack, check left stack
+                if (!leftmostStack)
+                {
+                    int leftStackIdx = stackIdx - 1;
+                    if (stacks[leftStackIdx].Count > idx)
+                    {
+                        if (IsSameTetrisBlock(tc, stacks[leftStackIdx][idx]))
+                        {
+                            stacks[leftStackIdx].RemoveAt(idx);
+                            stacks[stackIdx].RemoveAt(idx);
+                            // TODO: update score
+                        }
+                    }
+                }
+
+                // If not rightmost stack, check right stack
+                if (!rightmostStack)
+                {
+                    int nextStackIdx = stackIdx + 1;
+                    if (stacks[nextStackIdx].Count > idx)
+                    {
+                        if (IsSameTetrisBlock(tc, stacks[nextStackIdx][idx]))
+                        {
+                            stacks[nextStackIdx].RemoveAt(idx);
+                            stacks[stackIdx].RemoveAt(idx);
+                            // TODO: update score
+                        }
+                    }
+                }
+                // Check with right stack
+
+                return true;
+            }
+            else
+            {
+                if (tc.Pos.Y + 1 == stacks[stackIdx][topCharIdx].Pos.Y)
+                {
+                    int floatingCharDy = stacks[stackIdx].Count;
+
+                    // Remove from current stack
+                    if (IsSameTetrisBlock(tc, stacks[stackIdx][topCharIdx]))
+                    {
+                        stacks[stackIdx].RemoveAt(topCharIdx);
+                        remove = true;
+                        // TODO: update score
+                    }
+
+                    // For left most stack, only check right and bottom
+                    if (stackIdx == 0)
+                    {
+                        leftmostStack = true;
+                    }
+
+                    if (stackIdx == lastStackIdx)
+                    {
+                        rightmostStack = true;
+                    }
+
+                    // if not leftmost stack, check left stack
+                    if (!leftmostStack)
+                    {
+                        int leftStackIdx = stackIdx - 1;
+                        if (stacks[leftStackIdx].Count - 1 >= floatingCharDy)
+                        {
+                            if (IsSameTetrisBlock(tc, stacks[leftStackIdx][floatingCharDy]))
+                            {
+                                stacks[leftStackIdx].RemoveAt(floatingCharDy);
+                                // TODO: update the blocks in the stack
+                                remove = true;
+                                // TODO: update score
+                            }
+                        }
+                    }
+
+                    // If not rightmost stack, check right stack
+                    if (!rightmostStack)
+                    {
+                        int nextStackIdx = stackIdx + 1;
+                        if (stacks[nextStackIdx].Count - 1 >= floatingCharDy)
+                        {
+                            if (IsSameTetrisBlock(tc, stacks[nextStackIdx][floatingCharDy]))
+                            {
+                                stacks[nextStackIdx].RemoveAt(floatingCharDy);
+                                // TODO: update the blocks in the stack
+                                remove = true;
+                                // TODO: update score
+                            }
+                        }
+                    }
+                    // Update Teris Stack
+                    if (!remove)
+                        stacks[stackIdx].Add(tc);
+
+
+                    return true;
+                }
+            }
+
+            if (hitBottom)
+                return true;
+
+            return false;
+        }
+
+        // Use when the game finishes
+        protected static bool IsTetrisBeaten(List<List<TetrisChar>> list)
+        {
+            foreach (List<TetrisChar> l in list)
+            {
+                if (l.Count != 0)
+                    return false;
+            }
+            return true;
+        }
+
+        protected static void PrintTetrisManual()
+        {
+            Console.Clear();
+            Console.WriteLine("Tetris - Hello World");
+            Console.WriteLine("Arrows move up/down/right/left.");
+            Console.WriteLine("Press 'esc' quit.");
+            Console.WriteLine("Press space to pause.");
+        }
+
+        protected static void ReceiveTetrisKeyPress(TetrisChar tc, int rightMostStackIdx, ref bool live)
+        {
+            ConsoleKeyInfo consoleKey;
+            int x, y;
+            // get key and use it to set options
+            consoleKey = Console.ReadKey(true);
+            switch (consoleKey.Key)
+            {
+                case ConsoleKey.UpArrow: //UP
+                                         // Do nothing    
+                    break;
+                case ConsoleKey.DownArrow: // DOWN
+
+                    break;
+                case ConsoleKey.LeftArrow: //LEFT
+                    // if not leftmost, decrease x
+                    // TODO: stop transpassing
+                    x = tc.Pos.X;
+                    y = tc.Pos.Y;
+                    if (x != 0)
+                        tc.Pos = new Point(--x, y);
+                    break;
+                case ConsoleKey.RightArrow: //RIGHT
+                    // if not rightmost, increase x
+                    // TODO: stop transpassing
+                    x = tc.Pos.X;
+                    y = tc.Pos.Y;
+                    if (x != rightMostStackIdx)
+                        tc.Pos = new Point(++x, y);
+                    break;
+                case ConsoleKey.Spacebar:
+                    PauseTetris();
+                    break;
+                case ConsoleKey.Escape: //END
+                    live = false;
+                    break;
+
+            }
+        }
+
+
+        // Mode: 6, the tetris game
+        public static void PlayTetris()
+        {
+            bool gameLive = true;
+            ConsoleKeyInfo consoleKey;
+            
+            // location info & display
+            int i = 0;
+            // If a character hits the stack
+            bool landed = false;
+
+            // TODO: check display
+            PrintTetrisManual();
+
+            // Create a stage, every character has a color, a character value, and a coordinate
+            List<List<TetrisChar>> tetrisStacks = new List<List<TetrisChar>>();
+            for (i = 0; i < STACKS; i++)
+            {
+                tetrisStacks.Add(CreateTetrisStack(MAX_STACK_HEIGHT, i));
+            }
+
+            // Draw the stacks for the 1s time
+            DrawTetrisStack(tetrisStacks);
+
+            TetrisChar droppingChar = ReturnTetrisBlock(STACKS, DROP_POINT);
+
+
+            do // until escape
+            {
+                if (landed)
+                {
+                    // Drop a new character from the top
+                    droppingChar = ReturnTetrisBlock(STACKS, DROP_POINT);
+                    landed = false;
+                }
+                else
+                {
+                    // Flowing from top to bottom
+                    for (int j = DROP_POINT; j < CONSOLE_HEIGHT; j++)
+                    {
+                        Console.ForegroundColor = droppingChar.ChColor;
+                        // Keep moving
+                        WriteAt(droppingChar.ChValue.ToString(),
+                            droppingChar.Pos.X, droppingChar.Pos.Y, 500);
+                        WriteAt(" ", droppingChar.Pos.X, droppingChar.Pos.Y, 0);
+
+                        // see if a key has been pressed
+                        if (Console.KeyAvailable)
+                        {
+                            ReceiveTetrisKeyPress(droppingChar, STACKS - 1, ref gameLive);
+                            if (!gameLive)
+                                return;
+                        } 
+
+                        // Check for landing
+                        landed = IsTetrisBlockLanded(droppingChar, tetrisStacks);
+
+                        DrawTetrisStack(tetrisStacks);
+
+                        if (landed)
+                        {
+                            break;
+                        }
+
+                        // Update dropping block
+                        droppingChar.Pos = new Point(droppingChar.Pos.X, j);
+                    }
+                }
+
+                if (IsTetrisBeaten(tetrisStacks))
+                {
+                    // Print Congrats
+                    Console.WriteLine("Congratulations!");
+                    return;
+                }
+
+                // Draw Tetris Stacks
+                DrawTetrisStack(tetrisStacks);
+
+            } while (gameLive);
+            Console.WriteLine("Bye");
+        }
+
+        protected static void PauseTetris()
+        {
+            ConsoleKeyInfo consoleKey;
+            for (; ; )
+            {
+                consoleKey = Console.ReadKey(true);
+
+                if (consoleKey.Key == ConsoleKey.Spacebar)
+                    break;
+                else
+                    continue;
+            }
+
+        }
+
+
     }
 
-    class Program
+
+    public class Program
     {
-        protected static int origRow;
-        protected static int origCol;
-        static int CONSOLE_WIDTH = 79;
-        static int CONSOLE_HEIGHT = 29;
+        internal static int origRow;
+        internal static int origCol;
+        internal const int CONSOLE_WIDTH = 79;
+        internal const int CONSOLE_HEIGHT = 29;
 
         //private static string _hw = "HELLO WORLD!";
-        private static string _hw = "HE";
+        internal const string _hw = "HE";
 
         // https://docs.microsoft.com/en-us/dotnet/api/system.console.setcursorposition?view=net-5.0
-        protected static void WriteAt(string s, int x, int y, int sleep = 50)
+        internal static void WriteAt(string s, int x, int y, int sleep = 50)
         {
             object lockLock = new object();
             lock (lockLock)
@@ -355,341 +734,9 @@ namespace CS258
             }
         }
 
-        protected static void DrawTetrisStack(List<List<TetrisChar>> l)
-        {
-            Console.Clear();
-            for (int i = 0; i < l.Count; i++)
-            {
-                foreach (TetrisChar tc in l[i])
-                {
-                    Console.ForegroundColor = tc.ChColor;
-                    WriteAt(tc.ChValue.ToString(), tc.Pos.X, tc.Pos.Y, 0);
-                }
-            }
-        }
+       
 
-        protected static List<TetrisChar> CreateTetrisStack(int height, int columnIdx)
-        {
-            // Generate columns based on column index and height
-            Random r = new Random();
-            int i = r.Next(0, _hw.Length);
-            int colorRange = Enum.GetValues(typeof(ConsoleColor)).Length;
-
-            List<TetrisChar> l = new List<TetrisChar>();
-            int localHeight = r.Next(height, CONSOLE_HEIGHT);
-
-            for (i = CONSOLE_HEIGHT; i > localHeight; i--)
-            {
-                int j = r.Next(0, _hw.Length);
-                // Replace empty string
-                if (_hw[j].ToString() == " ")
-                {
-                    j++;
-                }
-
-                TetrisChar tc = new TetrisChar(_hw[j], (ConsoleColor)r.Next(1, colorRange), new Point(columnIdx, i));
-                l.Add(tc);
-            }
-
-            return l;
-        }
-
-        protected static TetrisChar ReturnTetrisBlock(int numOfStacks, int y)
-        {
-
-            Random r = new Random();
-            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
-            int idx = r.Next(0, _hw.Length);
-            if (_hw[idx].ToString() == " ")
-            {
-                idx++;
-            }
-            char c = _hw[idx];
-            int x = r.Next(0, numOfStacks);
-            // TODO: update y axis in Point
-            return new TetrisChar(c, (ConsoleColor)r.Next(0, range), new Point(x, y));
-        }
-
-        protected static bool IsSameTetrisBlock(TetrisChar tc1, TetrisChar tc2)
-        {
-            if (tc1.ChValue == tc2.ChValue || tc1.ChColor == tc2.ChColor)
-                return true;
-
-            return false;
-        }
-
-        protected static bool IsTetrisBlockLanded(TetrisChar tc, List<List<TetrisChar>> stacks)
-        {
-            // Check only for a given stack by the x axis, and check only with the stack top
-            int stackIdx = tc.Pos.X;
-            int topCharIdx = stacks[stackIdx].Count - 1;
-            int lastStackIdx = stacks.Count - 1;
-            bool remove = false;
-            bool rightmostStack = false;
-            bool leftmostStack = false;
-            bool hitBottom = false;
-            
-
-            // when thre is no blocks in the stack
-            if (topCharIdx == -1)
-            {
-                // Add block to stack right before hitting the bottom
-                if(tc.Pos.Y == CONSOLE_HEIGHT-1)
-                {
-                    TetrisChar tcBlock = new TetrisChar(tc.ChValue, tc.ChColor, new Point(tc.Pos.X, CONSOLE_HEIGHT));
-                    stacks[stackIdx].Add(tcBlock);
-                    
-                    hitBottom = true;
-                }
-                else
-                {
-                    return false;
-                }
-            }
-
-            // Empty Stack
-            if (topCharIdx == -1 && hitBottom)
-            {
-                int idx = 0; // bottom
-                // Check with left stack
-                if (stackIdx == 0)
-                {
-                    leftmostStack = true;
-                }
-
-                if (stackIdx == lastStackIdx)
-                {
-                    rightmostStack = true;
-                }
-
-                // if not leftmost stack, check left stack
-                if (!leftmostStack)
-                {
-                    int leftStackIdx = stackIdx - 1;
-                    if (stacks[leftStackIdx].Count > idx)
-                    {
-                        if (IsSameTetrisBlock(tc, stacks[leftStackIdx][idx]))
-                        {
-                            stacks[leftStackIdx].RemoveAt(idx);
-                            stacks[stackIdx].RemoveAt(idx);
-                        }
-                    }
-                }
-
-                // If not rightmost stack, check right stack
-                if (!rightmostStack)
-                {
-                    int nextStackIdx = stackIdx + 1;
-                    if (stacks[nextStackIdx].Count > idx)
-                    {
-                        if (IsSameTetrisBlock(tc, stacks[nextStackIdx][idx]))
-                        {
-                            stacks[nextStackIdx].RemoveAt(idx);
-                            stacks[stackIdx].RemoveAt(idx);
-                        }
-                    }
-                }
-                // Check with right stack
-
-                return true;
-            }
-            else
-            {
-                if (tc.Pos.Y + 1 == stacks[stackIdx][topCharIdx].Pos.Y)
-                {
-                    int floatingCharDy = stacks[stackIdx].Count;
-
-                    // Remove from current stack
-                    if (IsSameTetrisBlock(tc, stacks[stackIdx][topCharIdx]))
-                    {
-                        stacks[stackIdx].RemoveAt(topCharIdx);
-                        remove = true;
-                    }
-
-                    // For left most stack, only check right and bottom
-                    if (stackIdx == 0)
-                    {
-                        leftmostStack = true;
-                    }
-
-                    if (stackIdx == lastStackIdx)
-                    {
-                        rightmostStack = true;
-                    }
-
-                    // if not leftmost stack, check left stack
-                    if (!leftmostStack)
-                    {
-                        int leftStackIdx = stackIdx - 1;
-                        if (stacks[leftStackIdx].Count - 1 >= floatingCharDy)
-                        {
-                            if (IsSameTetrisBlock(tc, stacks[leftStackIdx][floatingCharDy]))
-                            {
-                                stacks[leftStackIdx].RemoveAt(floatingCharDy);
-                                // TODO: update the blocks in the stack
-                                remove = true;
-                            }
-                        }
-                    }
-
-                    // If not rightmost stack, check right stack
-                    if (!rightmostStack)
-                    {
-                        int nextStackIdx = stackIdx + 1;
-                        if (stacks[nextStackIdx].Count - 1 >= floatingCharDy)
-                        {
-                            if (IsSameTetrisBlock(tc, stacks[nextStackIdx][floatingCharDy]))
-                            {
-                                stacks[nextStackIdx].RemoveAt(floatingCharDy);
-                                // TODO: update the blocks in the stack
-                                remove = true;
-                            }
-                        }
-                    }
-                    // Update Teris Stack
-                    if (!remove)
-                        stacks[stackIdx].Add(tc);
-
-
-                    return true;
-                }
-            }
-
-            if (hitBottom)
-                return true;
-
-            return false;
-        }
-
-        protected static bool IsTetrisBeaten(List<List<TetrisChar>> list)
-        {
-            foreach (List<TetrisChar> l in list)
-            {
-                if (l.Count != 0)
-                    return false;
-            }
-            return true;
-        }
-
-        protected static void PlayTetris()
-        {
-            bool gameLive = true;
-            ConsoleKeyInfo consoleKey;
-            const int STACKS = 2;
-            const int DROP_POINT = 4;
-            const int MAX_STACK_HEIGHT = 28;
-            // location info & display
-            int i = 0;
-            // If a character hits the stack
-            bool landed = false;
-
-            Console.WriteLine("Tetris - Hello World");
-            Console.WriteLine("Arrows move up/down/right/left.");
-            Console.WriteLine("Press 'esc' quit.");
-            Console.WriteLine("Press space to pause.");
-
-            // Create a stage, every character has a color, a character value, and a coordinate
-            List<List<TetrisChar>> tetrisStacks = new List<List<TetrisChar>>();
-            for (i = 0; i < STACKS; i++)
-            {
-                tetrisStacks.Add(CreateTetrisStack(MAX_STACK_HEIGHT, i));
-            }
-
-            // Draw the stacks for the 1s time
-            DrawTetrisStack(tetrisStacks);
-
-            TetrisChar droppingChar = ReturnTetrisBlock(STACKS, DROP_POINT);
-
-            do // until escape
-            {
-                // see if a key has been pressed
-                if (Console.KeyAvailable)
-                {
-                    // get key and use it to set options
-                    consoleKey = Console.ReadKey(true);
-                    switch (consoleKey.Key)
-                    {
-                        case ConsoleKey.UpArrow: //UP
-                                                 // Do nothing    
-                            break;
-                        case ConsoleKey.DownArrow: // DOWN
-
-                            break;
-                        case ConsoleKey.LeftArrow: //LEFT
-
-                            break;
-                        case ConsoleKey.RightArrow: //RIGHT
-
-                            break;
-                        case ConsoleKey.Escape: //END
-                            gameLive = false;
-                            break;
-                        case ConsoleKey.Spacebar:
-                            PauseTetris();
-                            break;
-                    }
-                } // Key press
-
-                if (landed)
-                {
-                    // Drop a new character from the top
-                    droppingChar = ReturnTetrisBlock(STACKS, DROP_POINT);
-                    landed = false;
-                }
-                else
-                {
-                    // Flowing from top to bottom
-                    for (int j = DROP_POINT; j < CONSOLE_HEIGHT; j++)
-                    {
-                        Console.ForegroundColor = droppingChar.ChColor;
-                        // Keep moving
-                        WriteAt(droppingChar.ChValue.ToString(),
-                            droppingChar.Pos.X, droppingChar.Pos.Y, 100);
-                        WriteAt(" ", droppingChar.Pos.X, droppingChar.Pos.Y, 0);
-
-                        // Check for landing
-                        landed = IsTetrisBlockLanded(droppingChar, tetrisStacks);
-
-                        DrawTetrisStack(tetrisStacks);
-
-                        if (landed)
-                        {
-                            break;
-                        }
-
-                        // Update dropping block
-                        droppingChar.Pos = new Point(droppingChar.Pos.X, j);
-                    }
-                }
-                if(IsTetrisBeaten(tetrisStacks))
-                {
-                    // Print Congrats
-                    Console.WriteLine("Congratulations!");
-                    return;
-                }
-
-                // Draw Tetris Stacks
-                DrawTetrisStack(tetrisStacks);
-
-            } while (gameLive);
-            Console.WriteLine("Bye");
-        }
-
-        protected static void PauseTetris()
-        {
-            ConsoleKeyInfo consoleKey;
-            for (; ; )
-            {
-                consoleKey = Console.ReadKey(true);
-
-                if (consoleKey.Key == ConsoleKey.Spacebar)
-                    break;
-                else
-                    continue;
-            }
-
-        }
-
+        
 
         protected static void WriteAtCoordinate(Dictionary<int, int[]> coordinate, string s)
         {
@@ -1428,8 +1475,7 @@ namespace CS258
                 case 3: // print from top to bottom
                     char[] reversedString = _hw.ToCharArray();
                     Array.Reverse(reversedString);
-                    _hw = new string(reversedString);
-                    PrintTopToBottom(_hw);
+                    PrintTopToBottom(new string(reversedString));
                     break;
                 case 4: // print from bottom to top
                     PrintBottomToTop(_hw);
@@ -1438,7 +1484,7 @@ namespace CS258
                     StartFireworks(_hw);
                     break;
                 case 6: // TODO: Tetris game, move the character as it drops
-                    PlayTetris();
+                    Tetris.PlayTetris();
                     break;
                 case 7: // TODO: ?
                     break;
