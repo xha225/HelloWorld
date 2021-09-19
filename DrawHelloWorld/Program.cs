@@ -1,18 +1,50 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using System.Threading;
-using static System.Console;
 
 namespace CS258
 {
+    class TetrisChar
+    {
+        private char _ch;
+        public char ChValue
+        {
+            get { return _ch; }
+        }
+
+        private ConsoleColor _color;
+        public ConsoleColor ChColor
+        {
+            get { return _color; }
+        }
+
+        private Point _pos;
+        public Point Pos
+        {
+            get { return _pos; }
+            set { _pos = value; }
+        }
+
+        public TetrisChar(char c, ConsoleColor cc, Point p)
+        {
+            _ch = c;
+            _color = cc;
+            _pos = p;
+        }
+    }
+
     class Program
     {
         protected static int origRow;
         protected static int origCol;
+        static int CONSOLE_WIDTH = 79;
+        static int CONSOLE_HEIGHT = 29;
 
-        const int CONSOLE_WIDTH = 79;
-        const int CONSOLE_HEIGHT = 29;
+        //private static string _hw = "HELLO WORLD!";
+        private static string _hw = "HE";
 
         // https://docs.microsoft.com/en-us/dotnet/api/system.console.setcursorposition?view=net-5.0
         protected static void WriteAt(string s, int x, int y, int sleep = 50)
@@ -177,9 +209,9 @@ namespace CS258
             }
         }
 
-        protected static void DrawRow(string s,int dx, int dy, int count)
+        protected static void DrawRow(string s, int dx, int dy, int count)
         {
-            for(int i=0;i<count;i++)
+            for (int i = 0; i < count; i++)
             {
                 dx += i;
                 WriteAt(s, dx, dy, 0);
@@ -191,7 +223,7 @@ namespace CS258
             // Center
             WriteAt(s, dx, dy);
             // First layer
-            for(int i = 0; i <= layer; i++)
+            for (int i = 0; i <= layer; i++)
             {
                 WriteAt(s, dx, dy);
                 // Top left
@@ -204,15 +236,15 @@ namespace CS258
         protected static void PrintSqure(int dx, int dy, int len, string[,] s)
         {
             int x = dx, y = dy;
-            for(int i=0;i<len;i++)
+            for (int i = 0; i < len; i++)
             {
-                if (i==0 || i==len-1) // print row
+                if (i == 0 || i == len - 1) // print row
                 {
                     y = dy + i;
                     x = dx;
-                    for (int j=0;j<len;j++)
+                    for (int j = 0; j < len; j++)
                     {
-                        WriteAt(s[x-dx+j,y-dy], x+j, y, 0);
+                        WriteAt(s[x - dx + j, y - dy], x + j, y, 0);
                     }
                     if (i == len - 1)
                     {
@@ -224,9 +256,9 @@ namespace CS258
                 {
                     x = dx;
                     y = dy + i;
-                    WriteAt(s[x-dx,y-dy], x, y, 0);
-                    x = dx + len -1;
-                    WriteAt(s[x-dx,y-dy], x, y, 0);
+                    WriteAt(s[x - dx, y - dy], x, y, 0);
+                    x = dx + len - 1;
+                    WriteAt(s[x - dx, y - dy], x, y, 0);
                 }
             }
         }
@@ -236,7 +268,7 @@ namespace CS258
             int x = dx, y = dy;
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
-            
+
 
             string[,] fw = new string[,]
             {
@@ -253,8 +285,8 @@ namespace CS258
 
             // Print first layer
             Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
-            WriteAt(fw[2, 1], dx-1, dy, 0);
-            WriteAt(fw[2, 3], dx +1, dy, 0);
+            WriteAt(fw[2, 1], dx - 1, dy, 0);
+            WriteAt(fw[2, 3], dx + 1, dy, 0);
             int jump = 2;
             // Reset coordinates
             x = dx - 1;
@@ -305,12 +337,12 @@ namespace CS258
             const int BOTTOM = 40;
             const int X_AXIS = 10;
             Console.CursorVisible = false;
-            int i,j;
-            
-            for ( i= 0; i < hw.Length; i++)
+            int i, j;
+
+            for (i = 0; i < hw.Length; i++)
             {
                 // Flowing from bottom to top
-                for (j = BOTTOM; j > TOP-i; j--)
+                for (j = BOTTOM; j > TOP - i; j--)
                 {
                     WriteAt(hw[i].ToString(), X_AXIS, j, 100);
 
@@ -319,12 +351,345 @@ namespace CS258
                 }
 
                 ShowFireFlower(X_AXIS, j);
-                
+
             }
-            
-            
-            
         }
+
+        protected static void DrawTetrisStack(List<List<TetrisChar>> l)
+        {
+            Console.Clear();
+            for (int i = 0; i < l.Count; i++)
+            {
+                foreach (TetrisChar tc in l[i])
+                {
+                    Console.ForegroundColor = tc.ChColor;
+                    WriteAt(tc.ChValue.ToString(), tc.Pos.X, tc.Pos.Y, 0);
+                }
+            }
+        }
+
+        protected static List<TetrisChar> CreateTetrisStack(int height, int columnIdx)
+        {
+            // Generate columns based on column index and height
+            Random r = new Random();
+            int i = r.Next(0, _hw.Length);
+            int colorRange = Enum.GetValues(typeof(ConsoleColor)).Length;
+
+            List<TetrisChar> l = new List<TetrisChar>();
+            int localHeight = r.Next(height, CONSOLE_HEIGHT);
+
+            for (i = CONSOLE_HEIGHT; i > localHeight; i--)
+            {
+                int j = r.Next(0, _hw.Length);
+                // Replace empty string
+                if (_hw[j].ToString() == " ")
+                {
+                    j++;
+                }
+
+                TetrisChar tc = new TetrisChar(_hw[j], (ConsoleColor)r.Next(1, colorRange), new Point(columnIdx, i));
+                l.Add(tc);
+            }
+
+            return l;
+        }
+
+        protected static TetrisChar ReturnTetrisBlock(int numOfStacks, int y)
+        {
+
+            Random r = new Random();
+            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
+            int idx = r.Next(0, _hw.Length);
+            if (_hw[idx].ToString() == " ")
+            {
+                idx++;
+            }
+            char c = _hw[idx];
+            int x = r.Next(0, numOfStacks);
+            // TODO: update y axis in Point
+            return new TetrisChar(c, (ConsoleColor)r.Next(0, range), new Point(x, y));
+        }
+
+        protected static bool IsSameTetrisBlock(TetrisChar tc1, TetrisChar tc2)
+        {
+            if (tc1.ChValue == tc2.ChValue || tc1.ChColor == tc2.ChColor)
+                return true;
+
+            return false;
+        }
+
+        protected static bool IsTetrisBlockLanded(TetrisChar tc, List<List<TetrisChar>> stacks)
+        {
+            // Check only for a given stack by the x axis, and check only with the stack top
+            int stackIdx = tc.Pos.X;
+            int topCharIdx = stacks[stackIdx].Count - 1;
+            int lastStackIdx = stacks.Count - 1;
+            bool remove = false;
+            bool rightmostStack = false;
+            bool leftmostStack = false;
+            bool hitBottom = false;
+            
+
+            // when thre is no blocks in the stack
+            if (topCharIdx == -1)
+            {
+                // Add block to stack right before hitting the bottom
+                if(tc.Pos.Y == CONSOLE_HEIGHT-1)
+                {
+                    TetrisChar tcBlock = new TetrisChar(tc.ChValue, tc.ChColor, new Point(tc.Pos.X, CONSOLE_HEIGHT));
+                    stacks[stackIdx].Add(tcBlock);
+                    
+                    hitBottom = true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+
+            // Empty Stack
+            if (topCharIdx == -1 && hitBottom)
+            {
+                int idx = 0; // bottom
+                // Check with left stack
+                if (stackIdx == 0)
+                {
+                    leftmostStack = true;
+                }
+
+                if (stackIdx == lastStackIdx)
+                {
+                    rightmostStack = true;
+                }
+
+                // if not leftmost stack, check left stack
+                if (!leftmostStack)
+                {
+                    int leftStackIdx = stackIdx - 1;
+                    if (stacks[leftStackIdx].Count > idx)
+                    {
+                        if (IsSameTetrisBlock(tc, stacks[leftStackIdx][idx]))
+                        {
+                            stacks[leftStackIdx].RemoveAt(idx);
+                            stacks[stackIdx].RemoveAt(idx);
+                        }
+                    }
+                }
+
+                // If not rightmost stack, check right stack
+                if (!rightmostStack)
+                {
+                    int nextStackIdx = stackIdx + 1;
+                    if (stacks[nextStackIdx].Count > idx)
+                    {
+                        if (IsSameTetrisBlock(tc, stacks[nextStackIdx][idx]))
+                        {
+                            stacks[nextStackIdx].RemoveAt(idx);
+                            stacks[stackIdx].RemoveAt(idx);
+                        }
+                    }
+                }
+                // Check with right stack
+
+                return true;
+            }
+            else
+            {
+                if (tc.Pos.Y + 1 == stacks[stackIdx][topCharIdx].Pos.Y)
+                {
+                    int floatingCharDy = stacks[stackIdx].Count;
+
+                    // Remove from current stack
+                    if (IsSameTetrisBlock(tc, stacks[stackIdx][topCharIdx]))
+                    {
+                        stacks[stackIdx].RemoveAt(topCharIdx);
+                        remove = true;
+                    }
+
+                    // For left most stack, only check right and bottom
+                    if (stackIdx == 0)
+                    {
+                        leftmostStack = true;
+                    }
+
+                    if (stackIdx == lastStackIdx)
+                    {
+                        rightmostStack = true;
+                    }
+
+                    // if not leftmost stack, check left stack
+                    if (!leftmostStack)
+                    {
+                        int leftStackIdx = stackIdx - 1;
+                        if (stacks[leftStackIdx].Count - 1 >= floatingCharDy)
+                        {
+                            if (IsSameTetrisBlock(tc, stacks[leftStackIdx][floatingCharDy]))
+                            {
+                                stacks[leftStackIdx].RemoveAt(floatingCharDy);
+                                // TODO: update the blocks in the stack
+                                remove = true;
+                            }
+                        }
+                    }
+
+                    // If not rightmost stack, check right stack
+                    if (!rightmostStack)
+                    {
+                        int nextStackIdx = stackIdx + 1;
+                        if (stacks[nextStackIdx].Count - 1 >= floatingCharDy)
+                        {
+                            if (IsSameTetrisBlock(tc, stacks[nextStackIdx][floatingCharDy]))
+                            {
+                                stacks[nextStackIdx].RemoveAt(floatingCharDy);
+                                // TODO: update the blocks in the stack
+                                remove = true;
+                            }
+                        }
+                    }
+                    // Update Teris Stack
+                    if (!remove)
+                        stacks[stackIdx].Add(tc);
+
+
+                    return true;
+                }
+            }
+
+            if (hitBottom)
+                return true;
+
+            return false;
+        }
+
+        protected static bool IsTetrisBeaten(List<List<TetrisChar>> list)
+        {
+            foreach (List<TetrisChar> l in list)
+            {
+                if (l.Count != 0)
+                    return false;
+            }
+            return true;
+        }
+
+        protected static void PlayTetris()
+        {
+            bool gameLive = true;
+            ConsoleKeyInfo consoleKey;
+            const int STACKS = 2;
+            const int DROP_POINT = 4;
+            const int MAX_STACK_HEIGHT = 28;
+            // location info & display
+            int i = 0;
+            // If a character hits the stack
+            bool landed = false;
+
+            Console.WriteLine("Tetris - Hello World");
+            Console.WriteLine("Arrows move up/down/right/left.");
+            Console.WriteLine("Press 'esc' quit.");
+            Console.WriteLine("Press space to pause.");
+
+            // Create a stage, every character has a color, a character value, and a coordinate
+            List<List<TetrisChar>> tetrisStacks = new List<List<TetrisChar>>();
+            for (i = 0; i < STACKS; i++)
+            {
+                tetrisStacks.Add(CreateTetrisStack(MAX_STACK_HEIGHT, i));
+            }
+
+            // Draw the stacks for the 1s time
+            DrawTetrisStack(tetrisStacks);
+
+            TetrisChar droppingChar = ReturnTetrisBlock(STACKS, DROP_POINT);
+
+            do // until escape
+            {
+                // see if a key has been pressed
+                if (Console.KeyAvailable)
+                {
+                    // get key and use it to set options
+                    consoleKey = Console.ReadKey(true);
+                    switch (consoleKey.Key)
+                    {
+                        case ConsoleKey.UpArrow: //UP
+                                                 // Do nothing    
+                            break;
+                        case ConsoleKey.DownArrow: // DOWN
+
+                            break;
+                        case ConsoleKey.LeftArrow: //LEFT
+
+                            break;
+                        case ConsoleKey.RightArrow: //RIGHT
+
+                            break;
+                        case ConsoleKey.Escape: //END
+                            gameLive = false;
+                            break;
+                        case ConsoleKey.Spacebar:
+                            PauseTetris();
+                            break;
+                    }
+                } // Key press
+
+                if (landed)
+                {
+                    // Drop a new character from the top
+                    droppingChar = ReturnTetrisBlock(STACKS, DROP_POINT);
+                    landed = false;
+                }
+                else
+                {
+                    // Flowing from top to bottom
+                    for (int j = DROP_POINT; j < CONSOLE_HEIGHT; j++)
+                    {
+                        Console.ForegroundColor = droppingChar.ChColor;
+                        // Keep moving
+                        WriteAt(droppingChar.ChValue.ToString(),
+                            droppingChar.Pos.X, droppingChar.Pos.Y, 100);
+                        WriteAt(" ", droppingChar.Pos.X, droppingChar.Pos.Y, 0);
+
+                        // Check for landing
+                        landed = IsTetrisBlockLanded(droppingChar, tetrisStacks);
+
+                        DrawTetrisStack(tetrisStacks);
+
+                        if (landed)
+                        {
+                            break;
+                        }
+
+                        // Update dropping block
+                        droppingChar.Pos = new Point(droppingChar.Pos.X, j);
+                    }
+                }
+                if(IsTetrisBeaten(tetrisStacks))
+                {
+                    // Print Congrats
+                    Console.WriteLine("Congratulations!");
+                    return;
+                }
+
+                // Draw Tetris Stacks
+                DrawTetrisStack(tetrisStacks);
+
+            } while (gameLive);
+            Console.WriteLine("Bye");
+        }
+
+        protected static void PauseTetris()
+        {
+            ConsoleKeyInfo consoleKey;
+            for (; ; )
+            {
+                consoleKey = Console.ReadKey(true);
+
+                if (consoleKey.Key == ConsoleKey.Spacebar)
+                    break;
+                else
+                    continue;
+            }
+
+        }
+
 
         protected static void WriteAtCoordinate(Dictionary<int, int[]> coordinate, string s)
         {
@@ -741,7 +1106,7 @@ namespace CS258
         }
 
         protected static void SayHelloWorld()
-        {   
+        {
             List<string> hw = new List<string>()
             { "Hello World!", "こんにちは世界","你好，世界",
                 "नमस्ते दुनिया","Hola Mundo","مرحبا بالعالم",
@@ -751,20 +1116,20 @@ namespace CS258
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
             Console.CursorVisible = false;
-            
+
             // Use bold font
             Console.Write("\x1b[1m");
             // Change font size
             for (; ; )
             {
                 Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
-                
+
                 int i = r.Next(0, hw.Count);
                 Console.WriteLine(hw[i]);
                 Thread.Sleep(1000);
                 Console.Clear();
             }
-            
+
 
         }
 
@@ -951,7 +1316,7 @@ namespace CS258
                         rest = false;
 
                     // When y touches the bottom, then re-assign dx and dy
-                    if (i == ms.Count-2 && rest)
+                    if (i == ms.Count - 2 && rest)
                     {
                         dx = r.Next(0, CONSOLE_WIDTH);
                         dy = 0;
@@ -1044,40 +1409,38 @@ namespace CS258
         // MAIN
         public static void Main()
         {
-            string hw = "HELLO WORLD!";
+
 
             // TODO: Change mode before each run
-            const int MODE = 5;
+            const int MODE = 6;
 
             switch (MODE)
             {
                 case 0: // print hello world;
-                    Console.WriteLine(hw);
+                    Console.WriteLine(_hw);
                     break;
                 case 1: // print from left to right
-                    PrintLeftToRight(hw);
+                    PrintLeftToRight(_hw);
                     break;
                 case 2: // print from right to left
-                    PrintRightToLeft(hw);
+                    PrintRightToLeft(_hw);
                     break;
                 case 3: // print from top to bottom
-                    char[] reversedString = hw.ToCharArray();
+                    char[] reversedString = _hw.ToCharArray();
                     Array.Reverse(reversedString);
-                    hw = new string(reversedString);
-                    PrintTopToBottom(hw);
+                    _hw = new string(reversedString);
+                    PrintTopToBottom(_hw);
                     break;
                 case 4: // print from bottom to top
-                    PrintBottomToTop(hw);
+                    PrintBottomToTop(_hw);
                     break;
                 case 5: // Firework effect, characters going from bottom to top
-                    StartFireworks(hw);
+                    StartFireworks(_hw);
                     break;
-                case 6:
-                    // Hello world outline with characters
-                    PrintHelloWordOutline('/', hw);
+                case 6: // TODO: Tetris game, move the character as it drops
+                    PlayTetris();
                     break;
-                case 7: // Greetings in random language
-                    SayHelloWorld();
+                case 7: // TODO: ?
                     break;
                 case 8: // The Matrix HelloWorld!
                     for (int i = 0; i < 15; i++)
@@ -1098,10 +1461,10 @@ namespace CS258
                     }
                     break;
                 case 10: // Snake game-1, control "Hello World"
-                    Snake(hw);
+                    Snake(_hw);
                     break;
                 case 11: // Snake game-2, append characters
-                    Snake2(hw);
+                    Snake2(_hw);
                     break;
                 case 12: // Snake game-3, a moving snake
                     break;
@@ -1109,12 +1472,14 @@ namespace CS258
                     break;
                 case 14: // pac-man-2, use hello world to build the map
                     break;
-                case 15: // Tetris game, move the character as it drops
+                case 15: // Hello world outline with characters
+                    PrintHelloWordOutline('/', _hw);
                     break;
-                case 16: // Play the hello world music
+                case 16: // Greetings in random language
+                    SayHelloWorld();
+                    break;
+                case 17: // Play the hello world music
                     // https://khalidabuhakmeh.com/playing-the-super-mario-bros-theme-with-csharp
-                    break;
-                case 17: // ?
                     break;
                 case 18:
                     break;
