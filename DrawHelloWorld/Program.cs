@@ -8,7 +8,7 @@ namespace CS258
 {
     public class Tetris
     {
-        protected class TetrisChar
+        public class TetrisChar
         {
             private char _ch;
             public char ChValue
@@ -37,7 +37,7 @@ namespace CS258
             }
         }
 
-        private const int STACKS = 10;
+        private const int STACKS = 25;
         private const int DROP_POINT = 4;
         private const int MAX_STACK_HEIGHT = 20;
 
@@ -58,7 +58,7 @@ namespace CS258
         {
             // Generate columns based on column index and height
             Random r = new Random();
-            int i = r.Next(0, _hw.Length);
+            int i = r.Next(0, _HW.Length);
             int colorRange = Enum.GetValues(typeof(ConsoleColor)).Length;
 
             List<TetrisChar> l = new List<TetrisChar>();
@@ -66,14 +66,14 @@ namespace CS258
 
             for (i = CONSOLE_HEIGHT; i > localHeight; i--)
             {
-                int j = r.Next(0, _hw.Length);
+                int j = r.Next(0, _HW.Length);
                 // Replace empty string
-                if (_hw[j].ToString() == " ")
+                if (_HW[j].ToString() == " ")
                 {
                     j++;
                 }
 
-                TetrisChar tc = new TetrisChar(_hw[j], (ConsoleColor)r.Next(1, colorRange), new Point(columnIdx, i));
+                TetrisChar tc = new TetrisChar(_HW[j], (ConsoleColor)r.Next(1, colorRange), new Point(columnIdx, i));
                 l.Add(tc);
             }
 
@@ -85,12 +85,12 @@ namespace CS258
 
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
-            int idx = r.Next(0, _hw.Length);
-            if (_hw[idx].ToString() == " ")
+            int idx = r.Next(0, _HW.Length);
+            if (_HW[idx].ToString() == " ")
             {
                 idx++;
             }
-            char c = _hw[idx];
+            char c = _HW[idx];
             int x = r.Next(0, numOfStacks);
             // TODO: update y axis in Point
             return new TetrisChar(c, (ConsoleColor)r.Next(0, range), new Point(x, y));
@@ -98,7 +98,7 @@ namespace CS258
 
         protected static bool IsSameTetrisBlock(TetrisChar tc1, TetrisChar tc2)
         {
-            if (tc1.ChValue == tc2.ChValue || tc1.ChColor == tc2.ChColor)
+            if (tc1.ChValue == tc2.ChValue)// || tc1.ChColor == tc2.ChColor)
                 return true;
 
             return false;
@@ -318,12 +318,13 @@ namespace CS258
         {
             bool gameLive = true;
             ConsoleKeyInfo consoleKey;
-            
+
             // location info & display
             int i = 0;
             // If a character hits the stack
             bool landed = false;
 
+            Console.CursorVisible = false;
             // TODO: check display
             PrintTetrisManual();
 
@@ -365,7 +366,7 @@ namespace CS258
                             ReceiveTetrisKeyPress(droppingChar, STACKS - 1, ref gameLive);
                             if (!gameLive)
                                 return;
-                        } 
+                        }
 
                         // Check for landing
                         landed = IsTetrisBlockLanded(droppingChar, tetrisStacks);
@@ -422,11 +423,10 @@ namespace CS258
         internal const int CONSOLE_WIDTH = 79;
         internal const int CONSOLE_HEIGHT = 29;
 
-        //private static string _hw = "HELLO WORLD!";
-        internal const string _hw = "HE";
+        internal const string _HW = "HELLO WORLD!";
 
         // https://docs.microsoft.com/en-us/dotnet/api/system.console.setcursorposition?view=net-5.0
-        internal static void WriteAt(string s, int x, int y, int sleep = 50)
+        internal static void WriteAt(string s, int x, int y, int sleep = 0)
         {
             object lockLock = new object();
             lock (lockLock)
@@ -648,7 +648,6 @@ namespace CS258
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
 
-
             string[,] fw = new string[,]
             {
              { "\\", "", "", "", "/" },
@@ -662,10 +661,12 @@ namespace CS258
             WriteAt(fw[2, 2], x, y, 0);
             Thread.Sleep(700);
 
+            WriteAt(" ", x, y, 0);
             // Print first layer
             Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
             WriteAt(fw[2, 1], dx - 1, dy, 0);
             WriteAt(fw[2, 3], dx + 1, dy, 0);
+
             int jump = 2;
             // Reset coordinates
             x = dx - 1;
@@ -676,14 +677,24 @@ namespace CS258
             WriteAt(fw[3, 3], x + jump, y + jump, 0);
             Thread.Sleep(700);
 
+            WriteAt(" ", dx - 1, dy, 0);
+            WriteAt(" ", dx + 1, dy, 0);
+            WriteAt(" ", x, y, 0);
+            WriteAt(" ", x + jump, y, 0);
+            WriteAt(" ", x, y + jump, 0);
+            WriteAt(" ", x + jump, y + jump, 0);
+
+            // Print second layer
+            Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+
             WriteAt(fw[2, 0], dx - 2, dy, 0);
             WriteAt(fw[2, 4], dx + 2, dy, 0);
+
             jump += 2;
-            // Print second layer
+
             // Reset coordinates
             x = dx - 2;
             y = dy - 2;
-            Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
 
             WriteAt(fw[0, 0], x, y, 0);
             WriteAt(fw[0, 4], x + jump, y, 0);
@@ -691,7 +702,15 @@ namespace CS258
             WriteAt(fw[4, 4], x + jump, y + jump, 0);
 
             Thread.Sleep(700);
-            Console.Clear();
+
+            WriteAt(" ", dx - 2, dy, 0);
+            WriteAt(" ", dx + 2, dy, 0);
+
+            WriteAt(" ", x, y, 0);
+            WriteAt(" ", x + jump, y, 0);
+            WriteAt(" ", x, y + jump, 0);
+            WriteAt(" ", x + jump, y + jump, 0);
+
         }
 
         protected static void PrintFireworks(string[,] fw, int layer)
@@ -709,6 +728,46 @@ namespace CS258
 
         }
 
+        protected static void PrintFireworksBox(List<Tetris.TetrisChar> list)
+        {
+            foreach (Tetris.TetrisChar tc in list)
+            {
+                Console.ForegroundColor = tc.ChColor;
+                WriteAt(tc.ChValue.ToString(), tc.Pos.X, tc.Pos.Y, 0);
+            }
+
+        }
+
+        // TODO: Detect console borders before drawing
+        protected static List<Tetris.TetrisChar> CreateFireworksBox(int x, int y)
+        {
+            Random r = new Random(10);
+            const int dimension = 5;
+            int range = Enum.GetValues(typeof(ConsoleColor)).Length;
+            int dx = x, dy = y;
+            List<Tetris.TetrisChar> list = new List<Tetris.TetrisChar>();
+
+            int i = 0, j = 0;
+
+            for (i = 0; i < dimension + 5; i++)
+            {
+                for (j = 0; j < dimension; j++)
+                {
+                    int idx = r.Next(0, _HW.Length);
+                    Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
+                    if (_HW[idx] == ' ' || _HW[idx] == '!')
+                        idx--;
+
+                    list.Add(new Tetris.TetrisChar(_HW[idx], Console.ForegroundColor,
+                        new Point(dx + i, dy + j)));
+                }
+
+            }
+
+            return list;
+        }
+
+
         // MODE = 5
         protected static void StartFireworks(string hw)
         {
@@ -718,25 +777,29 @@ namespace CS258
             Console.CursorVisible = false;
             int i, j;
 
+            List<Tetris.TetrisChar> list = CreateFireworksBox(X_AXIS - 3, 26);
+
+            PrintFireworksBox(list);
+
             for (i = 0; i < hw.Length; i++)
             {
                 // Flowing from bottom to top
-                for (j = BOTTOM; j > TOP - i; j--)
+                for (j = BOTTOM - 15; j > TOP - i; j--)
                 {
-                    WriteAt(hw[i].ToString(), X_AXIS, j, 100);
-
+                    //  WriteAt(hw[i].ToString(), X_AXIS, j, 100);
+                    WriteAt( x:X_AXIS, y:j, s:hw[i].ToString());
                     if (j != i - TOP + 1)
                         WriteAt(" ", X_AXIS, j, 1);
                 }
 
                 ShowFireFlower(X_AXIS, j);
-
+                PrintFireworksBox(list);
             }
         }
 
-       
 
-        
+
+
 
         protected static void WriteAtCoordinate(Dictionary<int, int[]> coordinate, string s)
         {
@@ -1456,37 +1519,36 @@ namespace CS258
         // MAIN
         public static void Main()
         {
-
-
             // TODO: Change mode before each run
             const int MODE = 6;
 
             switch (MODE)
             {
                 case 0: // print hello world;
-                    Console.WriteLine(_hw);
+                    Console.WriteLine(_HW);
                     break;
                 case 1: // print from left to right
-                    PrintLeftToRight(_hw);
+                    PrintLeftToRight(_HW);
                     break;
                 case 2: // print from right to left
-                    PrintRightToLeft(_hw);
+                    PrintRightToLeft(_HW);
                     break;
                 case 3: // print from top to bottom
-                    char[] reversedString = _hw.ToCharArray();
+                    char[] reversedString = _HW.ToCharArray();
                     Array.Reverse(reversedString);
                     PrintTopToBottom(new string(reversedString));
                     break;
                 case 4: // print from bottom to top
-                    PrintBottomToTop(_hw);
+                    PrintBottomToTop(_HW);
                     break;
                 case 5: // Firework effect, characters going from bottom to top
-                    StartFireworks(_hw);
+                    StartFireworks(_HW);
                     break;
-                case 6: // TODO: Tetris game, move the character as it drops
+                case 6: // Tetris game
                     Tetris.PlayTetris();
                     break;
-                case 7: // TODO: ?
+                case 7: // Hello world outline with characters
+                    PrintHelloWordOutline('/', _HW);
                     break;
                 case 8: // The Matrix HelloWorld!
                     for (int i = 0; i < 15; i++)
@@ -1507,10 +1569,10 @@ namespace CS258
                     }
                     break;
                 case 10: // Snake game-1, control "Hello World"
-                    Snake(_hw);
+                    Snake(_HW);
                     break;
                 case 11: // Snake game-2, append characters
-                    Snake2(_hw);
+                    Snake2(_HW);
                     break;
                 case 12: // Snake game-3, a moving snake
                     break;
@@ -1518,26 +1580,11 @@ namespace CS258
                     break;
                 case 14: // pac-man-2, use hello world to build the map
                     break;
-                case 15: // Hello world outline with characters
-                    PrintHelloWordOutline('/', _hw);
-                    break;
-                case 16: // Greetings in random language
+                case 15: // Greetings in random language
                     SayHelloWorld();
                     break;
-                case 17: // Play the hello world music
-                    // https://khalidabuhakmeh.com/playing-the-super-mario-bros-theme-with-csharp
+                case 16: // TODO: Space Invader?
                     break;
-                case 18:
-                    break;
-                case 19:
-                    break;
-                    /*case 19: 
-                        break;
-                    case 20: 
-                        break;
-                    case 21: 
-                        break;
-                    */
             }
         }
     }
