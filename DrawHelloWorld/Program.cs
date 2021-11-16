@@ -38,8 +38,8 @@ namespace CS258
         }
 
         private const int STACKS = 25;
-        private const int DROP_POINT = 4;
-        private const int MAX_STACK_HEIGHT = 20;
+        private const int DROP_POINT = 1;
+        private const int MAX_STACK_HEIGHT = 5;
 
         protected static void DrawTetrisStack(List<List<TetrisChar>> l)
         {
@@ -421,7 +421,7 @@ namespace CS258
         internal static int origRow;
         internal static int origCol;
         internal const int CONSOLE_WIDTH = 79;
-        internal const int CONSOLE_HEIGHT = 29;
+        internal const int CONSOLE_HEIGHT = 20;
 
         internal const string _HW = "HELLO WORLD!";
 
@@ -495,7 +495,7 @@ namespace CS258
             {
 
                 Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
-                WriteAt(hw[i].ToString(), i + 2, 2);
+                WriteAt(hw[i].ToString(), i + 2, 2,300);
             }
 
         }
@@ -514,7 +514,7 @@ namespace CS258
             for (int i = 0; i < hw.Length; i++)
             {
 
-                // Console.ForegroundColor = (ConsoleColor)r.Next(0, range); 
+                 Console.ForegroundColor = (ConsoleColor)r.Next(0, range); 
                 // WriteAt(hw[i].ToString(), i + 2, 2);
 
                 // Flowing from right to left
@@ -552,7 +552,7 @@ namespace CS258
                 // Flowing from top to bottom
                 for (int j = TOP; j < BOTTOM - i; j++)
                 {
-                    WriteAt(hw[i].ToString(), X_AXIS, j, 100);
+                    WriteAt(hw[i].ToString(), X_AXIS, j, 500);
 
                     if (j != BOTTOM - i - 1)
                         WriteAt(" ", X_AXIS, j, 1);
@@ -786,7 +786,7 @@ namespace CS258
                 // Flowing from bottom to top
                 for (j = BOTTOM - 15; j > TOP - i; j--)
                 {
-                    //  WriteAt(hw[i].ToString(), X_AXIS, j, 100);
+                    WriteAt(hw[i].ToString(), X_AXIS, j, 100);
                     WriteAt( x:X_AXIS, y:j, s:hw[i].ToString());
                     if (j != i - TOP + 1)
                         WriteAt(" ", X_AXIS, j, 1);
@@ -1122,7 +1122,7 @@ namespace CS258
         }
 
         // Print the outline of HELLO WORLD with any character
-        protected static void PrintHelloWordOutline(char dot, string hw)
+        protected static void PrintHelloWordOutline(string dot, string hw)
         {
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
@@ -1209,7 +1209,7 @@ namespace CS258
                     for (int j = 0; j < bitImage[c].GetLength(1); j++)
                     {
                         if (bitImage[c][i, j] == 1)
-                            WriteAt(dot.ToString(), j + dx, i);
+                            WriteAt(dot, j + dx, i);
                     }
                 dx += bitImage[c].GetLength(0);
             }
@@ -1218,11 +1218,11 @@ namespace CS258
         protected static void SayHelloWorld()
         {
             List<string> hw = new List<string>()
-            { "Hello World!", "こんにちは世界","你好，世界",
+            { "Hello World", "こんにちは世界","你好 世界",
                 "नमस्ते दुनिया","Hola Mundo","مرحبا بالعالم",
             "Hallo Wereld","Bonjour le monde","Hallo Welt",
                 "Aloha honua","Ciao mondo","안녕하세요 세계",
-                "ഹലോ വേൾഡ്","Olá Mundo", "Привет, мир"};
+                "ഹലോ വേൾഡ്","Olá Mundo", "Привет мир"};
             Random r = new Random();
             int range = Enum.GetValues(typeof(ConsoleColor)).Length;
             Console.CursorVisible = false;
@@ -1520,44 +1520,46 @@ namespace CS258
         public static void Main()
         {
             // TODO: Change mode before each run
-            const int MODE = 6;
+            const int MODE = 0;
 
             switch (MODE)
             {
                 case 0: // print hello world;
                     Console.WriteLine(_HW);
+                    Console.Read();
                     break;
                 case 1: // print from left to right
                     PrintLeftToRight(_HW);
+                    Console.Read();
                     break;
                 case 2: // print from right to left
                     PrintRightToLeft(_HW);
+                    Console.Read();
                     break;
                 case 3: // print from top to bottom
                     char[] reversedString = _HW.ToCharArray();
                     Array.Reverse(reversedString);
                     PrintTopToBottom(new string(reversedString));
+                    Console.Read();
                     break;
                 case 4: // print from bottom to top
                     PrintBottomToTop(_HW);
+                    Console.Read();
                     break;
                 case 5: // Firework effect, characters going from bottom to top
                     StartFireworks(_HW);
+                    Console.Read();
                     break;
                 case 6: // Tetris game
                     Tetris.PlayTetris();
                     break;
                 case 7: // Hello world outline with characters
-                    PrintHelloWordOutline('/', _HW);
+                    PrintHelloWordOutline("$", _HW);
+                    Console.Read();
                     break;
-                case 8: // The Matrix HelloWorld!
-                    for (int i = 0; i < 15; i++)
-                    {
-                        ThreadStart child = new ThreadStart(EnterTheMatrixHw);
-                        Thread childThread = new Thread(child);
-                        childThread.Start();
-                        Thread.Sleep(2000);
-                    }
+                case 8: // Greetings in random language
+                    SayHelloWorld();
+                    Console.Read();
                     break;
                 case 9: // The Matrix
                     for (int i = 0; i < 30; i++)
@@ -1568,22 +1570,32 @@ namespace CS258
                         Thread.Sleep(1000);
                     }
                     break;
-                case 10: // Snake game-1, control "Hello World"
+                case 10: // The Matrix HelloWorld!
+                    for (int i = 0; i < 15; i++)
+                    {
+                        ThreadStart child = new ThreadStart(EnterTheMatrixHw);
+                        Thread childThread = new Thread(child);
+                        childThread.Start();
+                        Thread.Sleep(2000);
+                    }
+                    break;
+                
+                case 11: // Snake game-1, control "Hello World"
                     Snake(_HW);
                     break;
-                case 11: // Snake game-2, append characters
+                case 12: // Snake game-2, append characters
                     Snake2(_HW);
                     break;
-                case 12: // Snake game-3, a moving snake
+                case 13: // Snake game-3, a moving snake
                     break;
-                case 13: // pac-man-1, hello world is the pac-man
+                case 14: // pac-man-1, hello world is the pac-man
                     break;
-                case 14: // pac-man-2, use hello world to build the map
+                case 15: // pac-man-2, use hello world to build the map
                     break;
-                case 15: // Greetings in random language
-                    SayHelloWorld();
+                case 16: // Space Invader?
                     break;
-                case 16: // TODO: Space Invader?
+                default:
+                    Console.WriteLine("The mode is yet to be implemented");
                     break;
             }
         }
