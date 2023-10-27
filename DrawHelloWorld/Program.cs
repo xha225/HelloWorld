@@ -1561,7 +1561,7 @@ namespace CS258
                     SayHelloWorld();
                     Console.Read();
                     break;
-                case 9: // The Matrix
+                case 9: // The Matrix, digial rain
                     for (int i = 0; i < 30; i++)
                     {
                         ThreadStart child = new ThreadStart(EnterTheMatrix);
