@@ -495,7 +495,7 @@ namespace CS258
             {
 
                 Console.ForegroundColor = (ConsoleColor)r.Next(0, range);
-                WriteAt(hw[i].ToString(), i + 2, 2,300);
+                WriteAt(hw[i].ToString(), i + 2, 2,1000);
             }
 
         }
@@ -1273,6 +1273,65 @@ namespace CS258
             }
         }
 
+        static char GetRandomAsciiChar()
+        {
+            int seed = (int)DateTime.Now.Ticks;
+            Random random = new Random(seed);
+
+            // Generate a random integer within the ASCII range of English alphabet
+            int randomNumber = random.Next(0x0041, 0x007B);
+
+            // Convert the integer to a Unicode character
+            return (char)randomNumber;
+        }
+
+        static char GetRandomUnicodeJpChar()
+        {
+            int seed = (int)DateTime.Now.Ticks;
+            // Create a Random object
+            Random random = new Random(seed);
+
+            // Generate a random integer within the range of valid Unicode characters
+            int randomNumber = random.Next(0x30A0, 0x30FF);
+
+            // Convert the integer to a Unicode character
+            return (char)randomNumber;
+
+        }
+
+        static char GetCharForMatrix()
+        {
+            int seed = (int)DateTime.Now.Ticks;
+            Random randomChance = new Random(seed);
+            // Generate a random number between 0 and 100
+            int randomNumber = randomChance.Next(0, 101);
+
+            // Check if the random number is less than or equal to 10 (10% chance)
+            if (randomNumber <= 25)
+            {
+                // Call your function here
+                return GetRandomUnicodeJpChar();
+            }
+            else
+            {
+                return GetRandomAsciiChar();
+            }
+        }
+
+        static char GetRandomUnicodeChar()
+        {
+            int seed = (int)DateTime.Now.Ticks;
+            // Create a Random object
+            Random random = new Random(seed);
+
+            // Generate a random integer within the range of valid Unicode characters
+            int randomNumber = random.Next(0x0000, 0x10FFFF);
+
+            // Convert the integer to a Unicode character
+            return (char)randomNumber;
+
+        }
+
         // The Matrix Effect
         protected static void EnterTheMatrix()
         {
@@ -1303,7 +1362,7 @@ namespace CS258
                 {
                     // Add a random character at the head of the list
 
-                    char c = (char)r.Next(32, 125);
+                    char c = GetCharForMatrix();
                     ms.Insert(0, new KeyValuePair<char, int>(c, SIZE));
                 }
 
@@ -1520,7 +1579,7 @@ namespace CS258
         public static void Main()
         {
             // TODO: Change mode before each run
-            const int MODE = 0;
+            const int MODE = 9;
 
             switch (MODE)
             {
@@ -1554,14 +1613,18 @@ namespace CS258
                     Tetris.PlayTetris();
                     break;
                 case 7: // Hello world outline with characters
-                    PrintHelloWordOutline("$", _HW);
+                    PrintHelloWordOutline("/", _HW);
                     Console.Read();
                     break;
                 case 8: // Greetings in random language
                     SayHelloWorld();
                     Console.Read();
                     break;
+<<<<<<< HEAD
                 case 9: // The Matrix, digial rain
+=======
+                case 9: // The Matrix, digital rain
+>>>>>>> 6586e70 (Added functions to return random Unicode char)
                     for (int i = 0; i < 30; i++)
                     {
                         ThreadStart child = new ThreadStart(EnterTheMatrix);
