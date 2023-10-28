@@ -1620,11 +1620,7 @@ namespace CS258
                     SayHelloWorld();
                     Console.Read();
                     break;
-<<<<<<< HEAD
-                case 9: // The Matrix, digial rain
-=======
                 case 9: // The Matrix, digital rain
->>>>>>> 6586e70 (Added functions to return random Unicode char)
                     for (int i = 0; i < 30; i++)
                     {
                         ThreadStart child = new ThreadStart(EnterTheMatrix);
