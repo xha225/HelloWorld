@@ -1301,8 +1301,7 @@ namespace CS258
 
         static char GetCharForMatrix()
         {
-            int seed = (int)DateTime.Now.Ticks;
-            Random randomChance = new Random(seed);
+            Random randomChance = new Random();
             // Generate a random number between 0 and 100
             int randomNumber = randomChance.Next(0, 101);
 
@@ -1320,16 +1319,13 @@ namespace CS258
 
         static char GetRandomUnicodeChar()
         {
-            int seed = (int)DateTime.Now.Ticks;
-            // Create a Random object
-            Random random = new Random(seed);
+            Random random = new Random();
 
             // Generate a random integer within the range of valid Unicode characters
             int randomNumber = random.Next(0x0000, 0x10FFFF);
 
             // Convert the integer to a Unicode character
             return (char)randomNumber;
-
         }
 
         // The Matrix Effect
@@ -1399,7 +1395,7 @@ namespace CS258
                         rest = false;
 
                     // When y touches the bottom, then re-assign dx and dy
-                    // TODO: couble check i==ms.Count-1
+                    // TODO: double check i==ms.Count-1
                     if (i == ms.Count - 1 && rest)
                     {
                         dx = r.Next(0, CONSOLE_WIDTH);
@@ -1579,7 +1575,7 @@ namespace CS258
         public static void Main()
         {
             // TODO: Change mode before each run
-            const int MODE = 9;
+            const int MODE = 8;
 
             switch (MODE)
             {
